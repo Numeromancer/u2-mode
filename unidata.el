@@ -244,6 +244,12 @@ telnet to a remote host.")
 (defvar host-info nil
   "Local variable holding cache information for logging into a host.")
 
+(defvar unidata-buffer-list nil
+  "A list of all buffers running a unidata process.  This will almost
+always have only one member.  We use this, for example from unibasic
+programs to find a process which we can use for compiling and
+cataloging.")
+
 (defmacro setmax (max maybe)
   `(if (> ,maybe ,max)
        (setq ,max ,maybe)
@@ -310,9 +316,9 @@ telnet to a remote host.")
     cmd-list))
 
 (defun unidata-edit-command-hook (cmd-list)
-  (if (not (< (length cmd-list) 3))
+  (if (< (length cmd-list) 3)
       (error "Invalid edit syntax : %s" cmd-list))
-  (let* ((dict (string= (second cmd-list) "DICT"))
+  (let* ((dict (string= (nth 1 cmd-list) "DICT"))
          (table-name (nth (if dict 2 1) cmd-list))
          (rec-id (nth (if dict '3 '2) cmd-list)))
     (unidata-edit-record table-name rec-id  dict)))
@@ -442,7 +448,8 @@ telnet to a remote host.")
       (mapc (lambda (ev)     
               (unidata-send-command
                proc
-               (format unidata-setenv-format-string (car ev) (cdr ev))))
+               (format unidata-setenv-format-string (car ev) (cdr ev)))
+              (accept-process-output proc 10))
             unidata-environment-alist)
     (error (error "Error : make sure the variable unidata-environment-list is a proper alist."))))
   
@@ -578,7 +585,7 @@ copied back into the original file when finished editing."
             (not (nilstring (match-string 1 tmp-name)))))))
 
 
-(defcustom unidata-keep-temps-on-killing-buffer t
+(defcustom unidata-keep-temps-on-killing-buffer nil
   "Toggle deleting record temp files when the edit buffer is killed.
 This should normally be nil, but if you want to keep the temp files
 around after killing the edit buffer you can set it to non-nil."
@@ -605,9 +612,13 @@ temporary file is deleted when the buffer is killed unless
   (interactive "sTable Name:\nsRecord-Id:")
   (let* ((buffer (or u2-buffer (current-buffer)))
          (u2proc (get-buffer-process buffer))
-         (edit-cmd (unidata-make-edit-record-command table-name rec-id dict)))
+         (edit-cmd (unidata-make-edit-record-command table-name rec-id dict))
+         (keep-trying t))
     (unidata-send-command u2proc edit-cmd)
-    (accept-process-output u2proc)
+    (while keep-trying
+      (setq keep-trying (accept-process-output u2proc 10))  ;; give up after 10 seconds
+      (if (string-match "records copied" (unidata-get-last-output))
+          (setq keep-trying nil)))
     (if (string-match "records copied" (unidata-get-last-output))
         (progn
           (find-file-other-window (concat unidata-full-path "/"
@@ -793,6 +804,7 @@ record."
     (if (unidata-remote-path-p path)
         (unidata-open-remote-connection path)
       (unidata-open-local-connection path))
+    (push (current-buffer) unidata-buffer-list)
     (erase-buffer)
     (unidata-mode)))
         

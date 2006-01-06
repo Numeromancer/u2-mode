@@ -328,66 +328,67 @@ in you source code.")
   "Menu keymap used in `unibasic-mode' buffers by GNU Emacs.")
 (if unibasic-mode-map
     ()
-  (setq unibasic-mode-map (make-sparse-keymap))
-  (setq unibasic-menu-map (make-sparse-keymap "Unibasic"))
-  ;; make the ';' key electric.
-  (let ((ekey (char-to-string unibasic-separator-char)))
-    (define-key unibasic-mode-map ekey     'unibasic-electric-separator))
-  (define-key unibasic-mode-map "!"        'unibasic-electric-star)
-  (define-key unibasic-mode-map "*"        'unibasic-electric-star)
-  (define-key unibasic-mode-map "$"        'unibasic-electric-dollar)
-  (define-key unibasic-mode-map ":"        'unibasic-electric-colon)
-  (define-key unibasic-mode-map "\t"       'unibasic-electric-tab)
-  (define-key unibasic-mode-map "\r"       'unibasic-electric-newline)
-  (define-key unibasic-mode-map "\M-\r"    'unibasic-continued-newline)
-  (define-key unibasic-mode-map "\C-ca"    'unibasic-prev-command)
-  (define-key unibasic-mode-map "\C-ce"    'unibasic-next-command)
-  (define-key unibasic-mode-map "\C-cg"    'unibasic-grep)
-  (define-key unibasic-mode-map "\C-cU"    'unibasic-insert-emacs-tag)
-  (define-key unibasic-mode-map "\M-;"     'unibasic-append-comment)
-  (define-key unibasic-mode-map "\C-c*"    'unibasic-append-comment)
-  (define-key unibasic-mode-map "\M-a"     'unibasic-backward-to-separator)
-  (define-key unibasic-mode-map "\M-e"     'unibasic-forward-to-separator)
-  (define-key unibasic-mode-map "\M-\C-a"  'unibasic-skip-to-prev-label)
-  (define-key unibasic-mode-map "\M-\C-e"  'unibasic-skip-to-next-label)
-  (define-key unibasic-mode-map "\M-[."    'unibasic-skip-to-prev-label)
-  (define-key unibasic-mode-map "\M-];"    'unibasic-skip-to-next-label)
-  (define-key unibasic-mode-map "\M-\C-h"  'unibasic-mark-label-block)
-  (define-key unibasic-mode-map "\M-q"     'indent-region)
-  (define-key unibasic-mode-map "\C-c\C-b" 'unibasic-submit-bug-report)
-  (cond
-   ((eq unibasic-emacs-type 'xemacs)
-    (define-key unibasic-mode-map [(shift button1)] 'unibasic-follow-label))
-   (t
-    (define-key unibasic-mode-map [S-down-mouse-1]  'unibasic-follow-label)))
-  ;; Insert some functions into the menu-bar.
-  (define-key unibasic-mode-map [menu-bar insert]
-    (cons "Unibasic" unibasic-menu-map))
+  (progn
+    (setq unibasic-mode-map (make-sparse-keymap))
+    (setq unibasic-menu-map (make-sparse-keymap "Unibasic"))
+    ;; make the ';' key electric.
+    (let ((ekey (char-to-string unibasic-separator-char)))
+      (define-key unibasic-mode-map ekey     'unibasic-electric-separator))
+    (define-key unibasic-mode-map "!"        'unibasic-electric-star)
+    (define-key unibasic-mode-map "*"        'unibasic-electric-star)
+    (define-key unibasic-mode-map "$"        'unibasic-electric-dollar)
+    (define-key unibasic-mode-map ":"        'unibasic-electric-colon)
+    (define-key unibasic-mode-map "\t"       'unibasic-electric-tab)
+    (define-key unibasic-mode-map "\r"       'unibasic-electric-newline)
+    (define-key unibasic-mode-map "\M-\r"    'unibasic-continued-newline)
+    (define-key unibasic-mode-map "\C-ca"    'unibasic-prev-command)
+    (define-key unibasic-mode-map "\C-ce"    'unibasic-next-command)
+    (define-key unibasic-mode-map "\C-cg"    'unibasic-grep)
+    (define-key unibasic-mode-map "\C-cU"    'unibasic-insert-emacs-tag)
+    (define-key unibasic-mode-map "\M-;"     'unibasic-append-comment)
+    (define-key unibasic-mode-map "\C-c*"    'unibasic-append-comment)
+    (define-key unibasic-mode-map "\M-a"     'unibasic-backward-to-separator)
+    (define-key unibasic-mode-map "\M-e"     'unibasic-forward-to-separator)
+    (define-key unibasic-mode-map "\M-\C-a"  'unibasic-skip-to-prev-label)
+    (define-key unibasic-mode-map "\M-\C-e"  'unibasic-skip-to-next-label)
+    (define-key unibasic-mode-map "\M-[."    'unibasic-skip-to-prev-label)
+    (define-key unibasic-mode-map "\M-];"    'unibasic-skip-to-next-label)
+    (define-key unibasic-mode-map "\M-\C-h"  'unibasic-mark-label-block)
+    (define-key unibasic-mode-map "\M-q"     'indent-region)
+    (define-key unibasic-mode-map "\C-c\C-b" 'unibasic-submit-bug-report)
+    (cond
+     ((eq unibasic-emacs-type 'xemacs)
+      (define-key unibasic-mode-map [(shift button1)] 'unibasic-follow-label))
+     (t
+      (define-key unibasic-mode-map [S-down-mouse-1]  'unibasic-follow-label)))
+    ;; Insert some functions into the menu-bar.
+    (define-key unibasic-mode-map [menu-bar insert]
+      (cons "Unibasic" unibasic-menu-map))
 
 
-  (define-key unibasic-menu-map [ub-bug]
-    '("Send bug report" . unibasic-send-bug-report))
-  (define-key unibasic-menu-map [ub-sep1]
-    '("--"))
-  (define-key unibasic-menu-map [ub-etag]
-    '("Append Emacs Tag" . unibasic-insert-emacs-tag))
-  (define-key unibasic-menu-map [ub-comm]
-    '("Append Comment" . unibasic-append-comment))
-  (define-key unibasic-menu-map [ub-sep2]
-    '("--"))
-  (define-key unibasic-menu-map [ub-indent]
-    '("Indent Region" . unibasic-indent-region))
-  (define-key unibasic-menu-map [ub-mlabel]
-    '("Mark Label Block" . unibasic-mark-label-block))
-  (define-key unibasic-menu-map [ub-blabel]
-    '("Backward by Label" . unibasic-skip-to-prev-label))
-  (define-key unibasic-menu-map [ub-flabel]
-    '("Forward by Label" . unibasic-skip-to-next-label))
-  (define-key unibasic-menu-map [ub-bcmd]
-    '("Backward by Command" . unibasic-prev-command))
-  (define-key unibasic-menu-map [ub-fcmd]
-    '("Forward by Command" . unibasic-next-command))
-  )
+    (define-key unibasic-menu-map [ub-bug]
+      '("Send bug report" . unibasic-send-bug-report))
+    (define-key unibasic-menu-map [ub-sep1]
+      '("--"))
+    (define-key unibasic-menu-map [ub-etag]
+      '("Append Emacs Tag" . unibasic-insert-emacs-tag))
+    (define-key unibasic-menu-map [ub-comm]
+      '("Append Comment" . unibasic-append-comment))
+    (define-key unibasic-menu-map [ub-sep2]
+      '("--"))
+    (define-key unibasic-menu-map [ub-indent]
+      '("Indent Region" . unibasic-indent-region))
+    (define-key unibasic-menu-map [ub-mlabel]
+      '("Mark Label Block" . unibasic-mark-label-block))
+    (define-key unibasic-menu-map [ub-blabel]
+      '("Backward by Label" . unibasic-skip-to-prev-label))
+    (define-key unibasic-menu-map [ub-flabel]
+      '("Forward by Label" . unibasic-skip-to-next-label))
+    (define-key unibasic-menu-map [ub-bcmd]
+      '("Backward by Command" . unibasic-prev-command))
+    (define-key unibasic-menu-map [ub-fcmd]
+      '("Forward by Command" . unibasic-next-command))
+    ))
 
 ;; Checkout tcl mode. FSF might have make-lucid-menu-keymap.
 (defconst unibasic-xemacs-menu

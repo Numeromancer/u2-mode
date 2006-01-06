@@ -74,6 +74,14 @@ command here, and it will be used instead of the default `CATALOG'"
   :type 'string
   :group 'unidata)
 
+(defcustom unibasic-run-command "RUN"
+  "Unidata command verb used to catalog programs.
+If you have written some other programming or paragraph to run
+Unibasic programs and subroutines, you can put the name of that
+command here, and it will be used instead of the default `RUN'"
+  :type 'string
+  :group 'unidata)
+
 ;; version checking (from XEmacs sample .emacs file).
 (if (and (not (boundp 'emacs-major-version))
          (string-match "^[0-9]+" emacs-version))
@@ -94,13 +102,16 @@ command here, and it will be used instead of the default `CATALOG'"
 (when unibasic-mode-map
     (define-key unibasic-mode-map "\C-cc"    'unibasic-compile)
     (define-key unibasic-mode-map "\C-ct"    'unibasic-catalog)
+    (define-key unibasic-mode-map "\C-cr"    'unibasic-run)
     (define-key-after unibasic-menu-map [ub-catlg]
       '("Catalog this program" . unibasic-catalog) t)
     (define-key-after unibasic-menu-map [ub-cmp]
       '("Compile this file" . unibasic-compile) t)
+    (define-key-after unibasic-menu-map [ub-run]
+      '("Run this program" . unibasic-run) t)
 
     (setq unibasic-catalog-menu-map (make-sparse-keymap "Unibasic Cataloging"))
-    (define-key unibasic-menu-map [menu-bar insert]
+    (define-key unibasic-menu-map [catalog-menu]
       (cons "Unibasic Cataloging" unibasic-catalog-menu-map))
 
     (define-key unibasic-catalog-menu-map [unidata-catalog-global]
@@ -144,6 +155,23 @@ command here, and it will be used instead of the default `CATALOG'"
                    "\n")
              " "))
 
+
+(defun unibasic-make-run-command (file)
+  (mapconcat 'identity
+             (list unibasic-run-command
+                   (unibasic-get-source-table file)
+                   (file-name-nondirectory file)
+                   "\n")
+             " "))
+
+(defun unibasic-run-file (ud-proc file &optional options-string)
+  (unidata-send-command
+   ud-proc
+   unibasic-run-command
+   (unibasic-get-source-table file)
+   (file-name-nondirectory file)
+   options-string))
+
 (defun unibasic-compile-file (ud-proc file &optional catalog-p)
   (unidata-send-command
    ud-proc
@@ -184,26 +212,51 @@ on the Unidata server."
 ;; /current/ account path.  If no such process can be found, signal an
 ;; error. All references to unidata-process should be eliminated; this variable
 ;; is now buffer-local to the buffer running the unidata command line.
+
+
+;; TODO: Change to search through the list, comparing the path of
+;; FILE-NAME with each unidata account path, picking that buffer which
+;; has the unidata account in which FILE-NAME is found.
+(defun get-unidata-process (file-name)
+  "Get the unidata process best associated with FILE-NAME."
+  (unless (and (boundp 'cached-unidata-process)
+               (processp cached-unidata-process))
+    (make-local-variable 'cached-unidata-process)
+    (setq cached-unidata-process
+          (get-buffer-process (car unidata-buffer-list))))
+  cached-unidata-process)
+
+
 (defun unibasic-catalog ()
   (interactive)
   (let ((fn (buffer-file-name (current-buffer))))
-    (unibasic-catalog-file unidata-process fn)))
+    (unibasic-catalog-file (get-unidata-process fn) fn)))
 
 (defun unibasic-compile ()
   (interactive)
   (let* ((fn (buffer-file-name (current-buffer))))
-    (unibasic-compile-file unidata-process fn)))
+    (unibasic-compile-file (get-unidata-process fn) fn)))
+
+
+;; I'm getting deja-vu.  I think there is an underlying abstraction here.
+;; TODO: prompt form arguments
+(defun unibasic-run ()
+  (interactive)
+  (let* ((fn (buffer-file-name (current-buffer))))
+    (unibasic-run-file (get-unidata-process fn) fn)))
+
 
 (defun unibasic-compile-and-catalog ()
   (interactive)
-  (let* ((u2-buffer (process-buffer unidata-process))
-         (fn-buf (current-buffer))
-         (fn (buffer-file-name fn-buf)))
+  (let* ((fn-buf (current-buffer))
+         (fn (buffer-file-name fn-buf))
+         (u2-process (get-unidata-process fn))
+         (u2-buffer (process-buffer u2-process)))
     (save-excursion
-      (unibasic-compile-file unidata-process fn)
+      (unibasic-compile-file u2-process fn)
       (with-current-buffer u2-buffer
         ;; TODO: Check status of compile first
-        (unibasic-catalog-file unidata-process fn)))))
+        (unibasic-catalog-file u2-process fn)))))
 
 (defun host-is-this-host (host)
   nil)
