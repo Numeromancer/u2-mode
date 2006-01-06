@@ -1,0 +1,23 @@
+These are the the instructions for installing u2-mode for GNU Emacs.
+
+This is still very immature. Very.  For now, just copy the files
+somewhere, put that somewhere in your Emacs load-pat with
+
+(push "/some/where" load-path)
+
+and
+
+(load-file "/some/where/u2-load.el").
+
+
+Then you should be able to just `M-x unidata', and it will prompt you
+for the path name.  The path name can be a remote path.  For example,
+to log in to the Unidata account in `/data/unidata/accountX' on the
+remote server unimonster as user `someone', enter the following at the
+unidata prompt:
+
+/[telnet:]someone@unimonster:/data/unidata/accountX
+
+and hit Enter.  The [telnet:] is optional, but if tramp is loaded, it
+will tell tramp how to list files when you `View Account in Dired', an
+option available on the menu (C-RightClick).
