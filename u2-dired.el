@@ -174,6 +174,11 @@ this, you may also need to change `unidata-filelist-done-regexp'"
 (defvar u2-dired-list nil)
 (defvar u2-dired-cookies nil)
 
+
+;; TODO: use create a search for unidata buffers by account name.
+(defun u2-dired-get-unidata-buffer ()
+  (nth 0 unidata-buffer-list))
+
 ;; TODO: unidata-account-path is now buffer local.  Set it as a buffer
 ;; local variable and copy it from the unidata bufffer in the dired
 ;; buffer when that buffer is created.

@@ -61,6 +61,26 @@ source through `m4' or some other macro processor first), you can put
 the name of that command here."
   :type 'string
   :group 'unidata)
+
+
+(defvar unibasic-compile-options-alist
+  '(("-D" "Generate X-Reference for debugger")
+    ("-G" "Enable profiling")
+    ("-LIST" "Generate a list of the program")
+    ("-XREF" "Generate a cross reference table")
+    ("-Z2" "Enable debugging")
+    ("-I" "Keywords are case insensitive")))
+
+
+(defcustom unibasic-basic-arg-list nil
+  "A list of strings of command line arguments for compiling.
+The list will be appended as a space separated list of arguments to the end of
+the compile command line in ECL.  Usually for specifying debugging arguments to
+the compiler, since Unibasic provides little else."
+  :group 'unidata
+  :type '(repeat (string)))
+
+
 ;; TODO: get rid of this.
 (defcustom unibasic-default-source-table "BP"
   "Unidata table to send to the compile command if there is no other."
@@ -123,14 +143,6 @@ command here, and it will be used instead of the default `RUN'"
     
     )
 
-(defvar unibasic-compile-options-alist
-  '(("-D" "Generate X-Reference for debugger")
-    ("-G" "Enable profiling")
-    ("-LIST" "Generate a list of the program")
-    ("-XREF" "Generate a cross reference table")
-    ("-Z2" "Enable debugging")
-    ("-I" "Keywords are case insensitive")))
-
 
 
 ;;; Compilation and catalog commands
@@ -139,6 +151,7 @@ command here, and it will be used instead of the default `RUN'"
 (defun unibasic-default-source-table (file)
   "BP")
 
+(defvar unibasic-source-table nil)
 
 (defun unibasic-get-source-table (file-name)
   (cond ((string-match ".*/\\([^/]+\\)/[^/]*\\'" file-name)
@@ -149,10 +162,10 @@ command here, and it will be used instead of the default `RUN'"
 
 (defun unibasic-compile-command (file)
   (mapconcat 'identity
-             (list unibasic-basic-cmd-string
-                   (unibasic-get-source-table file)
-                   (file-name-nondirectory file)
-                   "\n")
+             (append (list unibasic-basic-cmd-string
+                           (unibasic-get-source-table file)
+                           (file-name-nondirectory file))
+                     unibasic-basic-arg-list)
              " "))
 
 
@@ -175,9 +188,7 @@ command here, and it will be used instead of the default `RUN'"
 (defun unibasic-compile-file (ud-proc file &optional catalog-p)
   (unidata-send-command
    ud-proc
-   unibasic-basic-cmd-string
-   (unibasic-get-source-table file)
-   (file-name-nondirectory file)))
+   (unibasic-compile-command file)))
 
 (defcustom unibasic-catalog-method 'local
   "Method of cataloguing when cataloguing a UniBasic program.

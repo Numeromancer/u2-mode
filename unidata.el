@@ -616,7 +616,7 @@ temporary file is deleted when the buffer is killed unless
          (keep-trying t))
     (unidata-send-command u2proc edit-cmd)
     (while keep-trying
-      (setq keep-trying (accept-process-output u2proc 10))  ;; give up after 10 seconds
+      (setq keep-trying (accept-process-output u2proc 5))  ;; give up after 10 seconds
       (if (string-match "records copied" (unidata-get-last-output))
           (setq keep-trying nil)))
     (if (string-match "records copied" (unidata-get-last-output))
