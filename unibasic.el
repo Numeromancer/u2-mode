@@ -74,6 +74,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+(require 'cl)
+
 (defconst unibasic-rcs-version
   "@(#)$Id$"
   "RCS version info for `unibasic-mode'.")
@@ -906,32 +908,121 @@ and checking for the presence of `unibasic-label-regexp' or
       (end-of-line)))
 
 
-(defun unibasic-align-equate-values ()
+
+
+
+
+
+(defun unibasic-align-strings (line-regexp npieces)
   (interactive)
-  (let ((equate-regexp "[ \t]*EQUATE[ \t]+\\(\\S-+\\)[ \t]+\\(TO\\|LIT\\(?:ERALLY\\)?\\)[ \t]+\\([^ \t\n]+\\)[ \t]*\\(;.*\\)?$")
-        boe eoe (longest 0) (longest2 0))
-    (save-excursion
-      (beginning-of-line)
-      (while (looking-at equate-regexp)
-        (forward-line -1))
-      (forward-line)
-      (setq boe (point))
-      (while (looking-at equate-regexp)
-        (let ((thisn (- (match-end 1) (match-beginning 1))))
-          (and (> thisn longest) (setq longest thisn)))
-        (let ((thisn (- (match-end 2) (match-beginning 2))))
-          (and (> thisn longest2) (setq longest2 thisn)))
-        (forward-line))
-      (setq eoe (point))
-      (goto-char boe)
-      (while (looking-at equate-regexp)
-        (let* ((thisn (- (match-end 1) (match-beginning 1)))
-               (thisn2 (- (match-end 2) (match-beginning 2)))
-               (spaces (make-string (- longest thisn) ? ))
-               (spaces2 (make-string (- longest2 thisn2) ? )))
-          (replace-match (concat "EQUATE \\1" spaces " \\2" spaces2  "   \\3 \\4"))
-          (unibasic-indent-line)
+  (let* ((ws-rx "\\([ \t]*\\)")
+	 (equate-regexp line-regexp)
+	 boe eoe (longest (make-list npieces 0)))
+    (flet ((mix (i) (+ (* 2 i) 1))
+           (evenp (i) (zerop (% i 2))))
+      (save-excursion
+        (beginning-of-line)
+        (while (looking-at equate-regexp)
+          (forward-line -1))
+        (forward-line)
+        (setq boe (point))
+        (while (looking-at equate-regexp)
+          (dotimes (i  npieces)
+            (let ((thisn (length (match-string (mix i)))))
+              (and (> thisn (nth i longest)) (setcar (nthcdr i longest) thisn))))
+          (forward-line))
+        (setq eoe (point))
+        (goto-char boe)
+        (while (looking-at equate-regexp)
+          (let ((reslen-1 npieces)
+                (reallen (* 2 npieces)))
+            (dotimes (i reallen)
+              (let* ((ix (1- (- reallen i)))
+                     (mix (1+ ix))
+                     (thisn (length (match-string mix)))
+                     (evenp (evenp ix))
+                     (spaces (if evenp   (make-string (- (nth (/ ix 2) longest) thisn) ? )   "")))
+                (if evenp
+                    (replace-match (concat (match-string mix) spaces "") nil nil nil mix)
+                  (replace-match " " nil nil nil mix)) ) ) )
+          (indent-according-to-mode)
           (forward-line))))))
+  
+  
+(defvar unibasic-align-equates-regex-list
+  (list "\EQU\\(?:ATE\\)"
+        "\\S-+"
+        "TO\\|LIT\\(?:ERALLY\\)?"
+        "[^ \t\n]+"
+        "\\(?:;.*\\)?$"))
+
+;; The \n in the last is necessary to avoid the regex matching across
+;; line endings. 
+(defvar unibasic-align-assignment-regex-list (list "\\S-+" "=" "[^;\n]+"))
+
+(defun unibasic-make-alignment-regex (rx-list)
+   (let* ((ws-rx "\\([ \t]*\\)")
+          (equate-regexp (concat "[ \t]*"
+				(mapconcat
+                                 (lambda (s) (concat "\\(" s "\\)"))
+                                 rx-list ws-rx)
+				"\\([ \t]*\\)")))
+     equate-regexp))
+
+(defvar unibasic-align-2column-assignments-regex-list
+  (list "\\S-+" "=" "[0-9]+\\|'[^'\n]*'" ";"
+        "\\S-+" "=" "[0-9]+\\|'[^'\n]*'"))
+
+(defun unibasic-align-equate-values()
+  (interactive)
+  (let* ((rx-list unibasic-align-equates-regex-list)
+         (n (length rx-list))
+         (regexp (unibasic-make-alignment-regex rx-list)))
+    (unibasic-align-strings regexp n)))
+
+(defun unibasic-align-assignments()
+  (interactive)
+  (let* ((rx-list unibasic-align-assignment-regex-list)
+         (n (length rx-list))
+         (regexp (unibasic-make-alignment-regex rx-list)))
+    (unibasic-align-strings regexp n)))
+
+(defun unibasic-align-2column-assignments()
+  (interactive)
+  (let* ((rx-list unibasic-align-2column-assignments-regex-list)
+         (n (length rx-list))
+         (regexp (unibasic-make-alignment-regex rx-list)))
+    (unibasic-align-strings regexp n)))
+
+
+
+
+;; (defun unibasic-align-equate-values ()
+;;   (interactive)
+;;   (let ((equate-regexp "[ \t]*EQUATE[ \t]+\\(\\S-+\\)[ \t]+\\(TO\\|LIT\\(?:ERALLY\\)?\\)[ \t]+\\([^ \t\n]+\\)[ \t]*\\(;.*\\)?$")
+;;         boe eoe (longest 0) (longest2 0))
+;;     (save-excursion
+;;       (beginning-of-line)
+;;       (while (looking-at equate-regexp)
+;;         (forward-line -1))
+;;       (forward-line)
+;;       (setq boe (point))
+;;       (while (looking-at equate-regexp)
+;;         (let ((thisn (- (match-end 1) (match-beginning 1))))
+;;           (and (> thisn longest) (setq longest thisn)))
+;;         (let ((thisn (- (match-end 2) (match-beginning 2))))
+;;           (and (> thisn longest2) (setq longest2 thisn)))
+;;         (forward-line))
+;;       (setq eoe (point))
+;;       (goto-char boe)
+;;       (while (looking-at equate-regexp)
+;;         (let* ((thisn (- (match-end 1) (match-beginning 1)))
+;;                (thisn2 (- (match-end 2) (match-beginning 2)))
+;;                (spaces (make-string (- longest thisn) ? ))
+;;                (spaces2 (make-string (- longest2 thisn2) ? )))
+;;           (replace-match (concat "EQUATE \\1" spaces " \\2" spaces2  "   \\3 \\4"))
+;;           (unibasic-indent-line)
+;;           (forward-line))))))
           
       
 
