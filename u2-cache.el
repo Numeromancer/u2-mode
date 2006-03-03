@@ -346,7 +346,7 @@ looks like this : (<host> <user> <remote directory> <method>)."
 			  ;; I give up.  Ask the user for the password.
                           ;; Ask tramp for it if tramp is available.
                           (let ((prompt (format "Password for %s@%s: " user host)))
-                            (if (functionp 'tramp-read-passwd)
+                            (if nil ;;(functionp 'tramp-read-passwd)
                                 (tramp-read-passwd)
                               (read-passwd prompt)))
                           )))

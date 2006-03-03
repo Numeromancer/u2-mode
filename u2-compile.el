@@ -235,6 +235,8 @@ on the Unidata server."
     (make-local-variable 'cached-unidata-process)
     (setq cached-unidata-process
           (get-buffer-process (car unidata-buffer-list))))
+  (unless (member (process-status cached-unidata-process) '(run))
+    (setq cached-unidata-process (get-buffer-process (car unidata-buffer-list))))
   cached-unidata-process)
 
 

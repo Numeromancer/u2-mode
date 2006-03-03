@@ -1399,6 +1399,13 @@ character and not as an operator.")
 (provide 'unibasic)
 
 
+;;
+;; $Log$
+;; Revision 1.5  2006/03/03 03:37:00  numeromancer
+;; *** empty log message ***
+;;
+;;
+
 ;; Local variables:
 ;;   mode: emacs-lisp
 ;;   auto-save-interval: 1000

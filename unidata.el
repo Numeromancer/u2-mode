@@ -148,12 +148,17 @@ it. The value will be double quoted automatically."
   :group 'unidata)
 ;; TODO: Add some code to allow tramp to complete this, and still get the
 ;; right path for the initial `cd', and then `LOGTO.'
-(defcustom unidata-account-path nil
+(defcustom unidata-account-path ""
   "String which holds the path to the Unidata account on the host.
 Unidata TCL Mode will automatically log into this account when starting."
   :type 'directory
   :group 'unidata)
-(defcustom unidata-udt-command "/opt/ud61/bin/udt"
+(defcustom unidata-application-path "/opt/ud71"
+  "Path to the base Unidata application directory.
+This should be the usually be the same as the UDTHOME environment variable."
+  :group 'unidata
+  :type 'string)
+(defcustom unidata-udt-command "${UDTBIN}/udt"
   "Command to call from the shell to start Unidata."
   :group 'unidata
   :type 'string)
@@ -229,11 +234,6 @@ we do not suppress the record count, but us it as the EOF marker."
 (defvar telnet-login-prompt-regexp "ogin[ \t]*:[ \t]*\\'")
 
 
-(defvar unidata-hide-output nil
-  "Internal variable used to hide command output.
-Used for getting LISTF AND LISTDICTS on an active connection.")
-
-
 (defvar unidata-process nil
   "Process running the Unidata shell.  This could be done through 
 telnet to a remote host.")
@@ -250,22 +250,6 @@ always have only one member.  We use this, for example from unibasic
 programs to find a process which we can use for compiling and
 cataloging.")
 
-(defmacro setmax (max maybe)
-  `(if (> ,maybe ,max)
-       (setq ,max ,maybe)
-     ,max))
-
-(defun chomp (str)
-  (or (and (string-match "\\(.*?\\)\n" str)
-           (match-string 1 str))
-      str))
-
-
-(eval-when-compile 
-  (defmacro def-local-var (varname value &optional doc)
-    `(progn
-       (defvar ,varname ,value ,doc)
-       (make-variable-buffer-local ',varname))))
 
 
 (defun unidata-check-process (proc) t)
@@ -372,19 +356,24 @@ cataloging.")
   (comint-send-string proc "exit")
   (comint-send-string proc unidata-new-line))
 
+(defun unidata-check-command-list (cl)
+  (if (null cl)
+      (error "Command list is null.")))
+
 ;;; TODO: write func to split words using quotes, &c,
 ;;; and pass those around to filters and hooks
 (defun unidata-filter-command (string)
   (let* ((str string)
          (cmd-list (split-string str "[ \t]+"))
          (word cmd-list))
+    (defun unidata-check-command-list cmd-list)
     (if unidata-auto-upcase-commands
         (setq str (unidata-upcase-command-words str)))
-    (setq cmd-list (split-string str))
+    (setq cmd-list (split-string str "[ \t]+"))
     (if cmd-list
         (dolist (hook unidata-command-hooks)
           (save-match-data
-            (if (and (cdr hook) (functionp (cdr hook))
+            (if (and (stringp (car cmd-list))(cdr hook) (functionp (cdr hook))
                      (string-match (car hook) (car cmd-list)))
                 (setq cmd-list (funcall (cdr hook) cmd-list))))))
     (mapconcat 'identity cmd-list " ")))
@@ -445,12 +434,11 @@ cataloging.")
 
 (defun unidata-setup-environment (proc)
   (condition-case nil
-      (mapc (lambda (ev)     
-              (unidata-send-command
-               proc
-               (format unidata-setenv-format-string (car ev) (cdr ev)))
-              (accept-process-output proc 10))
-            unidata-environment-alist)
+      (dolist (ev unidata-environment-alist)     
+        (unidata-send-command
+         proc
+         (format unidata-setenv-format-string (car ev) (cdr ev)))
+        (accept-process-output proc 10))
     (error (error "Error : make sure the variable unidata-environment-list is a proper alist."))))
   
 
@@ -523,6 +511,14 @@ cataloging.")
 			  (forward-line 0)
 			  (point-marker))))
 	(buffer-substring comint-last-input-end pmark)))))
+
+
+
+
+
+
+
+
 
 ;;; ------------------------------------------------------------
 ;;; Functions for editing records
@@ -616,7 +612,8 @@ temporary file is deleted when the buffer is killed unless
          (keep-trying t))
     (unidata-send-command u2proc edit-cmd)
     (while keep-trying
-      (setq keep-trying (accept-process-output u2proc 5))  ;; give up after 10 seconds
+      (setq keep-trying
+            (accept-process-output u2proc 5))  ;; give up after 10 seconds
       (if (string-match "records copied" (unidata-get-last-output))
           (setq keep-trying nil)))
     (if (string-match "records copied" (unidata-get-last-output))
@@ -654,6 +651,15 @@ record."
     (unidata-send-command unidata-process
                           (unidata-make-save-record-command file-name))
     (accept-process-output unidata-process)))
+
+
+
+
+
+
+
+
+
 
 
 ;;; ------------------------------------------------------------
@@ -817,6 +823,14 @@ record."
 
 
 (provide 'unidata)
+
+
+;;
+;; $Log$
+;; Revision 1.4  2006/03/03 03:37:00  numeromancer
+;; *** empty log message ***
+;;
+;;
 
 
 ;; Local variables:
