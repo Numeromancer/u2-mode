@@ -70,7 +70,7 @@
 (require 'comint)
 (require 'telnet)
 (require 'u2-cache)
-
+(require 'cl)
 
 (defconst unidata-rcs-version
   "@(#)$Id$"
@@ -250,6 +250,19 @@ always have only one member.  We use this, for example from unibasic
 programs to find a process which we can use for compiling and
 cataloging.")
 
+;; TODO: Change to search through the list, comparing the path of
+;; FILE-NAME with each unidata account path, picking that buffer which
+;; has the unidata account in which FILE-NAME is found.
+(defun get-unidata-process (file-name)
+  "Get the unidata process best associated with FILE-NAME."
+  (unless (and (boundp 'cached-unidata-process)
+               (processp cached-unidata-process))
+    (make-local-variable 'cached-unidata-process)
+    (setq cached-unidata-process
+          (get-buffer-process (car unidata-buffer-list))))
+  (unless (member (process-status cached-unidata-process) '(run))
+    (setq cached-unidata-process (get-buffer-process (car unidata-buffer-list))))
+  cached-unidata-process)
 
 
 (defun unidata-check-process (proc) t)
@@ -305,7 +318,8 @@ cataloging.")
   (let* ((dict (string= (nth 1 cmd-list) "DICT"))
          (table-name (nth (if dict 2 1) cmd-list))
          (rec-id (nth (if dict '3 '2) cmd-list)))
-    (unidata-edit-record table-name rec-id  dict)))
+    (unidata-edit-record table-name rec-id  dict)
+    nil))
 
 (defun unidata-redirect (cmd buf-name proc done-regexp)
   (let (buf)
@@ -543,42 +557,62 @@ copied back into the original file when finished editing."
                  record-id  (unidata-make-tmpfile-name table-name record-id dict))))
     cmd-string))
          
-(defun unidata-make-save-record-command (tmp-file)
-  (let* ((rec-info-list (unidata-split-temp-record-name tmp-file))
-         (table-name (nth 0 rec-info-list))
-         (rec-id (nth 1 rec-info-list))
-         (dict (nth 2 rec-info-list)))
+;; (defun unidata-make-save-record-command (tmp-file)
+;;   (let* ((rec-info-list (unidata-split-temp-record-name tmp-file))
+;;          (table-name (nth 0 rec-info-list))
+;;          (rec-id (nth 1 rec-info-list))
+;;          (dict (nth 2 rec-info-list)))
+;;     (format "COPY FROM %s TO %s %s \"%s\",\"%s\" OVERWRITING"
+;;             unidata-temp-record-dir (if dict "DICT" "") table-name
+;;             tmp-file rec-id)))
+
+(defun unidata-make-save-record-command2 (rec-info-path)
+  (let* ((table-name (nth 0 rec-info-path))
+         (rec-id (nth 1 rec-info-path))
+         (dict (nth 2 rec-info-path))
+         (tmp-rec-id (file-name-nondirectory buffer-file-name)))
     (format "COPY FROM %s TO %s %s \"%s\",\"%s\" OVERWRITING"
             unidata-temp-record-dir (if dict "DICT" "") table-name
-            tmp-file rec-id)))
+            tmp-rec-id rec-id)))
 
-(defvar unidata-tmp-record-file-extension "u2rec")
 
+(defvar unidata-tmp-record-file-extension "u2r")
+(defvar unidata-tmp-file-cnt 0)
+
+
+;; Unidata has the perfectly reasonable limit of 32 chars in an ID
+;; :-), so we limit the temp file name to 32 bytes. 
 (defun unidata-make-tmpfile-name (table-name record-id &optional dict)
-  (let ((tlen (length table-name))
-        (idlen (length record-id)))
-    (format  "u2%s~%03d%s~%03d%s.%s"
-             (if dict "~dict" "") tlen table-name
-             idlen record-id
+  (flet ((cutstr (s) (substring s 0 (min 7 (length s))))
+         (clean (s) (while (string-match "[^-a-zA-Z0-9_.]" s)
+                      (setq s (replace-match "_" t t s)))
+                s)
+         (inc-count () (setq  unidata-tmp-file-cnt
+                              (% (1+ unidata-tmp-file-cnt) 100000))))
+    (format  "%s%s~%s-%05d.%s"
+             (if dict "dict~" "")
+             (cutstr table-name)
+             (clean (cutstr record-id))
+             (inc-count)
              unidata-tmp-record-file-extension)))
 
 
 ;; TODO:Use the 3-digit numbers to make sure the this works even if
 ;; ~[0-9]{3} occurs in the record id or the table name (however
 ;; unlikely that may be.
-(defun unidata-split-temp-record-name (tmp-name)
-  (save-match-data
-    (let ((temp-rec-regexp (concat "u2"
-                                   "\\(\\(?:~dict\\)?\\)"
-                                   "~\\([0-9]\\{3\\}\\)"
-                                   "\\(.*\\)"
-                                   "~\\([0-9]\\{3\\}\\)"
-                                   "\\(.*\\)"
-                                   "\." unidata-tmp-record-file-extension)))
-      (string-match temp-rec-regexp tmp-name)
-      (list (match-string 3 tmp-name)
-            (match-string 5 tmp-name)
-            (not (nilstring (match-string 1 tmp-name)))))))
+;; (defun unidata-split-temp-record-name (tmp-name)
+;;   (save-match-data
+;;     (let ((temp-rec-regexp (concat "u2"
+;;                                    "\\(\\(?:~dict\\)?\\)"
+;;                                    "~\\([0-9]\\{3\\}\\)"
+;;                                    "\\(.*\\)"
+;;                                    "~\\([0-9]\\{3\\}\\)"
+;;                                    "\\(.*\\)"
+;;                                    "\." unidata-tmp-record-file-extension)))
+;;       (string-match temp-rec-regexp tmp-name)
+;;       (list (match-string 3 tmp-name)
+;;             (match-string 5 tmp-name)
+;;             (not (nilstring (match-string 1 tmp-name)))))))
 
 
 (defcustom unidata-keep-temps-on-killing-buffer nil
@@ -625,7 +659,9 @@ temporary file is deleted when the buffer is killed unless
           ;; Now in the record buffer. Setup local variable to point
           ;; to unidata process, for saving later.
           (make-local-variable 'unidata-process)
+          (make-local-variable 'unidata-record-path)
           (setq unidata-process u2proc)
+          (setq unidata-record-path (list table-name rec-id dict))
           (rename-buffer (concat table-name ":" rec-id))
           (add-hook 'after-save-hook 'unidata-save-record nil t)
           (unless unidata-keep-temps-on-killing-buffer
@@ -647,10 +683,14 @@ record."
   (let* ((buffer (or buffer (current-buffer)))
          (full-file-name (buffer-file-name buffer))
          (file-name (file-name-nondirectory full-file-name))
-         (split-list (unidata-split-temp-record-name file-name)))
-    (unidata-send-command unidata-process
-                          (unidata-make-save-record-command file-name))
-    (accept-process-output unidata-process)))
+         (process (or (if (member (process-status unidata-process) '(run))
+                          unidata-process)
+                      (get-unidata-process full-file-name))))
+    (with-current-buffer buffer
+      (unidata-send-command
+       process
+       (unidata-make-save-record-command2 unidata-record-path))
+      (accept-process-output unidata-process))))
 
 
 
@@ -827,6 +867,16 @@ record."
 
 ;;
 ;; $Log$
+;; Revision 1.5  2006/03/06 03:33:18  numeromancer
+;; The record editing code was failing with temp file names longer than
+;; 32 characters because of Unidata's limit on IDs.  I changed the code to
+;; create a buffer-local list with the table & id names, the the dict flag,
+;; instead of parsing it from the file names.  I then changed the format of
+;; the temp files to ensure that they are <= 32 characters, and to clean out
+;; characters which might confuse the shell (in my case, especially '*').  I
+;; made it more robust about saving the file when the unidata process has been
+;; restarted.
+;;
 ;; Revision 1.4  2006/03/03 03:37:00  numeromancer
 ;; *** empty log message ***
 ;;

@@ -225,19 +225,6 @@ on the Unidata server."
 ;; is now buffer-local to the buffer running the unidata command line.
 
 
-;; TODO: Change to search through the list, comparing the path of
-;; FILE-NAME with each unidata account path, picking that buffer which
-;; has the unidata account in which FILE-NAME is found.
-(defun get-unidata-process (file-name)
-  "Get the unidata process best associated with FILE-NAME."
-  (unless (and (boundp 'cached-unidata-process)
-               (processp cached-unidata-process))
-    (make-local-variable 'cached-unidata-process)
-    (setq cached-unidata-process
-          (get-buffer-process (car unidata-buffer-list))))
-  (unless (member (process-status cached-unidata-process) '(run))
-    (setq cached-unidata-process (get-buffer-process (car unidata-buffer-list))))
-  cached-unidata-process)
 
 
 (defun unibasic-catalog ()
