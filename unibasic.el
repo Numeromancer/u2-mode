@@ -240,18 +240,22 @@ It is definately preferable to have this set if possible.") ))
   "\\(^[ \t]*[!\\*]\\)\\|\\(;[ \t]*\\*.*\\)"
   "Regular expression used to recognise unibasic comments.")
 
+(defvar unibasic-baseline-comment-regexp
+  "^[ \t]*\\(!\\|\\*\\)\\{3\\}"
+  "Regular expression used to recognise unibasic comments.")
+
 (defvar unibasic-block-inter-regexp
   "[ \t]*\\<\\(UNTIL\\|WHILE\\).*\\(DO\\)?[ \t]*\\($\\|;[ \t]*\\*\\)")
 
 (defvar unibasic-block-start-regexp
-  "\\<\\(THEN\\|ELSE\\|LOCKED\\|LOOP\\|\\(UNTIL\\|WHILE\\).*DO\\|ON ERROR\\|DO\\)[ \t]*\\($\\|;[ \t]*\\*\\)"
+  "\\<\\(BEGIN_BLOCK\\|THEN\\|ELSE\\|LOCKED\\|LOOP\\|\\(UNTIL\\|WHILE\\).*DO\\|ON ERROR\\|DO\\)[ \t]*\\($\\|;[ \t]*\\*\\)"
   "Regular expression used to recognise the start of a unibasic block of
 statements for indentation.")
 
 ;; 29Dec05:Tim S.: modified to allow end statement to be after another "COMMAND;", and
 ;; still be indented as an end-of-block;
 (defvar unibasic-block-end-regexp
-  ".*\\<\\(END\\|REPEAT\\|NEXT\\)\\([ \t;]\\|$\\)"
+  ".*\\<\\(END_BLOCK\\|END\\|REPEAT\\|NEXT\\)\\([ \t;]\\|$\\)"
   "Regular expression used to recognise the end of a unibasic block of
 statements for indentation.")
 
@@ -301,7 +305,7 @@ in you source code.")
   (if unibasic-font-lock-syntactify
       (modify-syntax-entry ?\* "."    unibasic-mode-syntax-table)
     (modify-syntax-entry ?\* "<"    unibasic-mode-syntax-table))
-  (modify-syntax-entry ?\. "_"    unibasic-mode-syntax-table)
+  (modify-syntax-entry ?\. "w"    unibasic-mode-syntax-table)
   (modify-syntax-entry ?\$ "_"    unibasic-mode-syntax-table)
   (modify-syntax-entry ?\; "."    unibasic-mode-syntax-table)
   (modify-syntax-entry ?\n ">"    unibasic-mode-syntax-table)
@@ -550,19 +554,6 @@ TIMEOUT is the number of idle seconds to wait and FUNC is the function."
          (c (if (null c) ?\0 c)));; code to cope with a nil for char-before.
     (char-equal c unibasic-continuation-char)))
 
-(defun unibasic-syntactic-line (line)
-  "Return the line offset for the next line of code.
-Beginning at start, search back and skip any comments or blank lines until
-the next line of unibasic code. This uses and return the same offsets as
-`looking-at' and similar, i.e. 1 for the current line, 0 for the previous
-line etc."
-  (while (and (or (unibasic-looking-at unibasic-comment-regexp line)
-                  (unibasic-looking-at "^[ \t]*$" line)
-                  (unibasic-looking-at (unibasic-label-only-regexp) line))
-              (> (unibasic-get-bol line) 1))
-    (setq line (1- line)))
-  line)
-
 (defun unibasic-looking-at (regexp &optional line)
   "Look for a regular expression (regexp) and the beginning of line (line).
 Used mainly by `unibasic-indent-line'."
@@ -594,7 +585,8 @@ white-space character on this line."
   "Insert '*' or '!' and indent to column 0 if this is an empty line."
   (interactive "p")
   (insert-char last-command-char count)
-  (if (save-excursion (beginning-of-line) (looking-at "^[ \t]*\\(\\*\\|!\\)"))
+  (if (save-excursion (beginning-of-line)
+                      (looking-at "^[ \t]*\\(\\*\\|!\\)\\{3\\}"))
       (save-excursion (beginning-of-line) (delete-horizontal-space))))
 
 (defun unibasic-electric-dollar (&optional count)
@@ -645,7 +637,7 @@ white-space character on this line."
     (setq count (1- count))))
 
 (defun unibasic-continued-newline ()
-  "Continue line by inserting `unibasic-continuation-char' at the end of the line.
+  "Continue line by inserting `unibasic-continuation-char' at the end of line.
 Bound to \\[unibasic-continued-newline]"
   (interactive)
   (insert-char unibasic-continuation-char 1)
@@ -780,6 +772,21 @@ Bound to \\[unibasic-grep]"
   (grep (format "grep -n %s %s" tag "*")))
 
 
+
+(defun unibasic-syntactic-line (line)
+  "Return the line offset for the next line of code.
+Beginning at start, search back and skip any comments or blank lines until
+the next line of unibasic code. This uses and return the same offsets as
+`looking-at' and similar, i.e. 1 for the current line, 0 for the previous
+line etc."
+  (while (and (or (unibasic-looking-at unibasic-comment-regexp line)
+                  (unibasic-looking-at "^[ \t]*$" line)
+                  (unibasic-looking-at (unibasic-label-only-regexp) line))
+              (> (unibasic-get-bol line) 1))
+    (setq line (1- line)))
+  line)
+
+
 (defun unibasic-get-arg-align (this-col)
   (condition-case nil
       (save-excursion
@@ -851,7 +858,7 @@ to `unibasic-initial-indent' plus `unibasic-default-indent' as needed."
         (setq thiscol (- thiscol unibasic-default-indent)))
     (cond
      ;; leave comments and $... vars alone.
-     ((or (unibasic-looking-at unibasic-comment-regexp)
+     ((or (unibasic-looking-at unibasic-baseline-comment-regexp)
           (unibasic-looking-at unibasic-compiler-directive-regexp))
       (current-indentation))
      ((unibasic-looking-at "[ \t]*CASE");; handle case statements
@@ -929,7 +936,8 @@ and checking for the presence of `unibasic-label-regexp' or
         (while (looking-at equate-regexp)
           (dotimes (i  npieces)
             (let ((thisn (length (match-string (mix i)))))
-              (and (> thisn (nth i longest)) (setcar (nthcdr i longest) thisn))))
+              (and (> thisn (nth i longest))
+                   (setcar (nthcdr i longest) thisn))))
           (forward-line))
         (setq eoe (point))
         (goto-char boe)
@@ -941,9 +949,13 @@ and checking for the presence of `unibasic-label-regexp' or
                      (mix (1+ ix))
                      (thisn (length (match-string mix)))
                      (evenp (evenp ix))
-                     (spaces (if evenp   (make-string (- (nth (/ ix 2) longest) thisn) ? )   "")))
+                     (spaces (if evenp
+                                 (make-string
+                                  (- (nth (/ ix 2) longest) thisn) ? )
+                               "")))
                 (if evenp
-                    (replace-match (concat (match-string mix) spaces "") nil nil nil mix)
+                    (replace-match
+                     (concat (match-string mix) spaces "") nil nil nil mix)
                   (replace-match " " nil nil nil mix)) ) ) )
           (indent-according-to-mode)
           (forward-line))))))
@@ -955,6 +967,9 @@ and checking for the presence of `unibasic-label-regexp' or
         "TO\\|LIT\\(?:ERALLY\\)?"
         "[^ \t\n]+"
         "\\(?:;.*\\)?$"))
+
+(defvar unibasic-align-continued-regex-list
+  (list ".*" "|"))
 
 ;; The \n in the last is necessary to avoid the regex matching across
 ;; line endings. 
@@ -970,8 +985,8 @@ and checking for the presence of `unibasic-label-regexp' or
      equate-regexp))
 
 (defvar unibasic-align-2column-assignments-regex-list
-  (list "\\S-+" "=" "[0-9]+\\|'[^'\n]*'" ";"
-        "\\S-+" "=" "[0-9]+\\|'[^'\n]*'"))
+  (list "[^ \t\n]+" "=" "[0-9]+\\|'[^'\n]*'\\|\"[^\"\n]*\"" ";"
+        "[^ \t\n]+" "=" "[0-9]+\\|'[^'\n]*'\\|\"[^\"\n]*\""))
 
 (defun unibasic-align-equate-values()
   (interactive)
@@ -994,6 +1009,12 @@ and checking for the presence of `unibasic-label-regexp' or
          (regexp (unibasic-make-alignment-regex rx-list)))
     (unibasic-align-strings regexp n)))
 
+(defun unibasic-align-continuations ()
+  (interactive)
+  (let* ((rx-list unibasic-align-continued-regex-list)
+         (n (length rx-list))
+         (regexp (unibasic-make-alignment-regex rx-list)))
+    (unibasic-align-strings regexp n)))
 
 
 
@@ -1032,11 +1053,13 @@ and checking for the presence of `unibasic-label-regexp' or
         boe eoe (longest-first 0) (longest-second 0))
     (save-excursion
       (beginning-of-line)
-      (while (and (> (line-beginning-position) (point-min)) (looking-at commands-regexp))
+      (while (and (> (line-beginning-position) (point-min))
+                  (looking-at commands-regexp))
         (forward-line -1))
       (forward-line)
       (setq boe (point))
-      (while (and (< (line-end-position) (point-max)) (looking-at commands-regexp))
+      (while (and (< (line-end-position) (point-max))
+                  (looking-at commands-regexp))
         (let ((thisn1 (- (match-end 1) (match-beginning 1)))
               (thisn2 (- (match-end 2) (match-beginning 2))))
           (and (> thisn1 longest-first) (setq longest-first thisn1))
@@ -1044,7 +1067,8 @@ and checking for the presence of `unibasic-label-regexp' or
           (forward-line)))
       (setq eoe (point))
       (goto-char boe)
-      (while (and (> (line-end-position) (point-min)) (looking-at commands-regexp))
+      (while (and (> (line-end-position) (point-min))
+                  (looking-at commands-regexp))
         (let* ((thisn1 (- (match-end 1) (match-beginning 1)))
                (thisn2 (- (match-end 2) (match-beginning 2)))
                (spaces1 (make-string (- longest-first thisn1) ? ))
@@ -1240,22 +1264,22 @@ Bound to \\[unibasic-insert-emacs-tag]"
       "DEL" "DELETE" "DELETELIST" "DELETION" "DELETEU" "DIM" "DIMENSION"
       "DISCONNECT" "DISPLAY" "ECHO" "END" "ENTER" "EQU" "EQUATE" "EXECUTE"
       "EXECUTESQL" "EXIT" "FILELOCK" "FILEUNLOCK" "FIND" "FINDSTR" "FOOTING"
-      "FOR" "FORMLIST" "FUNCTION" "GARBAGECOLLECT" "GET" "GETCOLUMNDATA" "GETCOLUMNNAME"
-      "GETLIST" "GETX" "GOSUB" "GOTO" "GROUPSTORE" "HEADING" "HUSH" "IF"
-      "INPUT" "INPUTCLEAR" "INPUTERR" "INPUTIF" "INPUTNULL" "INPUTTRAP" "INS"
-      "LOCATE" "LOCK" "LOOP" "MAT" "MATBUILD" "MATPARSE" "MATREAD" "MATREADL"
-      "MATREADU" "MATWRITE" "MATWRITEU" "MDPERFORM" "NOCONVERT" "NULL" "ON"
-      "OPEN" "OPENSEQ" "OSBREAD" "OSBWRITE" "OSCLOSE" "OSDELETE" "OSOPEN"
-      "OSREAD" "OSWRITE" "PAGE" "PCPERFORM" "PERFORM" "PRECISION" "PRINT"
-      "PRINTER" "PRINTERCLOSE" "PRINTERR" "PROCREAD" "PROCWRITE" "PROGRAM" 
-      "PROMPT" "READ" "READBCK" "READBCKL" "READBCKU" "READFWD" "READFWDL"
-      "READFWDU" "READL" "READLIST" "READNEXT" "READNEXTTUPLE" "READSEQ"
-      "READT" "READU" "READV" "READVL" "READVU" "RECORDLOCKL" "RECORDLOCKU" 
-      "RELEASE" "REM" "REMOVE" "REPEAT" "RESIZET" "RETURN" "REWIND" "RNDSEED"
-      "ROLLBACK" "RQM" "SELECT" "SELECTINDEX" "SEND" "SENDX" "SETINDEX"
-      "SETMARK" "SLEEP" "STOP" "SUBROUTINE" "SWAP" "TIMEOUT" "UDTEXECUTE"
-      "UNLOCK" "WEOF" "WEOFSEQ" "WRITE" "WRITELIST" "WRITESEQ" "WRITESEQF"
-      "WRITET" "WRITEU" "WRITEV" "WRITEVU" )
+      "FOR" "FORMLIST" "FUNCTION" "GARBAGECOLLECT" "GET" "GETCOLUMNDATA"
+      "GETCOLUMNNAME" "GETLIST" "GETX" "GOSUB" "GOTO" "GROUPSTORE" "HEADING"
+      "HUSH" "IF" "INPUT" "INPUTCLEAR" "INPUTERR" "INPUTIF" "INPUTNULL"
+      "INPUTTRAP" "INS" "LOCATE" "LOCK" "LOOP" "MAT" "MATBUILD" "MATPARSE"
+      "MATREAD" "MATREADL" "MATREADU" "MATWRITE" "MATWRITEU" "MDPERFORM"
+      "NOCONVERT" "NULL" "ON" "OPEN" "OPENSEQ" "OSBREAD" "OSBWRITE" "OSCLOSE"
+      "OSDELETE" "OSOPEN" "OSREAD" "OSWRITE" "PAGE" "PCPERFORM" "PERFORM"
+      "PRECISION" "PRINT" "PRINTER" "PRINTERCLOSE" "PRINTERR" "PROCREAD"
+      "PROCWRITE" "PROGRAM" "PROMPT" "READ" "READBCK" "READBCKL" "READBCKU"
+      "READFWD" "READFWDL" "READFWDU" "READL" "READLIST" "READNEXT"
+      "READNEXTTUPLE" "READSEQ" "READT" "READU" "READV" "READVL" "READVU"
+      "RECORDLOCKL" "RECORDLOCKU" "RELEASE" "REM" "REMOVE" "REPEAT" "RESIZET"
+      "RETURN" "REWIND" "RNDSEED" "ROLLBACK" "RQM" "SELECT" "SELECTINDEX" "SEND"
+      "SENDX" "SETINDEX" "SETMARK" "SLEEP" "STOP" "SUBROUTINE" "SWAP" "TIMEOUT"
+      "UDTEXECUTE" "UNLOCK" "WEOF" "WEOFSEQ" "WRITE" "WRITELIST" "WRITESEQ"
+      "WRITESEQF" "WRITET" "WRITEU" "WRITEV" "WRITEVU" )
     "The list of unibasic commands. These are used for font-locking and for
 auto-capitalization. If you add commands to this list you must re-make
 `unibasic-command-regexp' using the code in the comments."))
@@ -1401,6 +1425,9 @@ character and not as an operator.")
 
 ;;
 ;; $Log$
+;; Revision 1.6  2006/08/09 19:18:23  numeromancer
+;; BASIC alignment additions, and corrections to record editing.
+;;
 ;; Revision 1.5  2006/03/03 03:37:00  numeromancer
 ;; *** empty log message ***
 ;;

@@ -2,7 +2,7 @@
 ;;
 ;; Major mode for working with UniBasic files in EMACS.
 ;;
-;; Author: Pat Thoyts <tschaef@sbcglobal.net>
+;; Author: Timothy M. Schaeffer <tschaef@sbcglobal.net>
 ;; Version: 1.10   Time-stamp: <2005-11-22 23:24:03 timothy>
 ;; Maintainer: Timothy M. Schaeffer <tschaef@sbcglobal.net>
 ;; Keywords: languages database telnet
@@ -36,28 +36,6 @@
 ;;; INSTALLATION
 ;;  ------------
 ;;
-;;   You may need to have make-regexp available. More recent versions of
-;;   FSF Emacs have got `regex-opt' already. unidata-mode will try and
-;;   use this. If it isn't available it will go for make-regexp and if
-;;   that isn't available it'll ask for it.
-;;
-;;   Variables you should consider changing are:
-;;
-;;   To use this mode, put unidata-mode.el somewhere in your emacs load
-;;   path, compile it (using M-x byte-compile-file) and add the
-;;   following to your init file:
-;;
-;;   (autoload 'unidata-mode "unidata--tcl-mode" "Unidata mode." t)
-;;     (setq auto-mode-alist 
-;;       (append '(("\\.ub$" . unidata-mode)) auto-mode-alist))
-;;
-;;   _OR_
-;;     type in `M-x unidata--mode' once the file has been loaded.
-;;
-;;
-;;; SEE ALSO:
-;;  --------
-;;  proc-mode - a major mode for editing Pick style PROC buffers.
 ;;
 ;;; KNOWN BUGS:
 ;;  -----------
@@ -250,6 +228,52 @@ always have only one member.  We use this, for example from unibasic
 programs to find a process which we can use for compiling and
 cataloging.")
 
+(eval-and-compile
+  (defvar unidata-ecl-commands
+    '("ACCT_RESTORE" "ACCT.SAVE" "AE" "ANALYZE.FILE" "AVAIL" "BASIC"
+      "BASICTYPE" "BLIST" "BLOCK.PRINT" "BLOCK.TERM" "BUILD.INDEX"
+      "BYE" "CATALOG" "CENTURY.PIVOT" "CHECKOVER" "CLEAR.ACCOUNT"
+      "CLEAR.FILE" "CLEAR.LOCKS" "CLEAR.ONABORT" "CLEAR.ONBREAK"
+      "CLEARDATA" "CLEARPROMPTS" "CLR" "CNAME" "COMO" "COMPILE.DICT"
+      "CONFIGURE.FILE" "CONNECT" "CONTROLCHARS" "CONVERT.SQL" "COPY"
+      "CREATE.FILE" "CREATE.INDEX" "CREATE.TRIGGER" "DATE"
+      "DATE.FORMAT" "DEBUG.FLAG" "DEBUGLINE.ATT" "DEBUGLINE.DET"
+      "DEFAULT.LOCKED.ACTION" "DELETE" "DELETECOMMON" "DELETE.CATALOG"
+      "DELETE.FILE" "DELETE.INDEX" "DELETE.TRIGGER" "DISABLE.INDEX"
+      "DISABLE.USERSTATS" "DTX" "DUP.STATUS" "ECLTYPE" "ED"
+      "ENABLE.INDEX" "ENABLE.USERSTATS" "FILE.STAT" "FILELIMIT"
+      "FILEVER" "FLOAT.PRECISION" "GETUSER" "GROUP.STAT" "HASH.TEST"
+      "HELP" "HUSH" "HUSHBASIC" "ISTAT" "LIMIT" "LINE.ATT" "LINE.DET"
+      "LINE.STATUS" "LIST.CONNECT" "LIST.INDEX" "LIST.LANGGRP"
+      "LIST.LOCKS" "LIST.PAUSED" "LIST.QUEUE" "LIST.READU"
+      "LIST.TRIGGER" "LIST.USERSTATS" "LISTPEQS" "LISTPTR" "LISTUSER"
+      "LO" "LOCK" "LOGTO" "LS" "LSL" "MAG_RESTORE" "MAKE.MAP.FILE"
+      "MAP" "MAX.USER" "MENUS" "MESSAGE" "MIN.MEMORY" "MYSELF"
+      "NEWPCODE" "NFAUSER" "NODIRCONVERT" "ON.ABORT" "ON.BREAK" "PAGE"
+      "PATHSUB" "PAUSE" "PHANTOM" "PORT.STATUS" "PRIMENUMBER"
+      "PRINT.ORDER" "PROTOCOL" "PTERM" "PTRDISABLE" "PTRENABLE"
+      "QUIT" "READDICT.DICT" "REBUILD.FILE" "RECORD" "RELEASE"
+      "RELEASE.ITEMS" "RESIZE" "REUSE.ROW" "RUN" "SET.DEC" "SET.LANG"
+      "SET.MONEY" "SET.THOUS" "SET.TIME" "SET.WIDEZERO" "SETDEBUGLINE"
+      "SETFILE" "SETLINE" "SETOSPRINTER" "SETPTR" "SETTAPE" "SORT"
+      "SORT.TYPE" "SP.ASSIGN" "SP.CLOSE" "SP.EDIT" "SP.KILL" "SP-LISTQ"
+      "SP.STATUS" "SPOOL" "SQL" "STACKCOMMON" "STARTPTR" "STATUS"
+      "STOPPTR" "SUPERCLEAR.LOCKS" "SUPERRELEASE" "T.ATT" "T.BAK"
+      "T.CHK" "T.DET" "T.DUMP" "T.EOD" "T.FWD" "T.LOAD" "T.RDLBL"
+      "T.READ" "T.REW" "T.SPACE" "T.STATUS" "T.UNLOAD" "T.WEOF" "TERM"
+      "TIMEOUT" "UDT.OPTIONS" "UNIENTRY" "UNSETDEBUGLINE" "UNSETLINE"
+      "UPDATE.INDEX" "USHOW" "UV_RESTORE" "VCATALOG" "VERSION" "VI"
+      "WAKE" "WHAT" "WHERE" "WHO" "XTD")))
+
+(defvar unidata-ecl-commands-regexp
+  (eval-when-compile
+    (make-regexp unidata-ecl-commands)))
+
+
+(defvar unidata-font-lock-keywords
+  (list 
+   (cons unidata-ecl-commands-regexp 'font-lock-function-name-face)))
+
 ;; TODO: Change to search through the list, comparing the path of
 ;; FILE-NAME with each unidata account path, picking that buffer which
 ;; has the unidata account in which FILE-NAME is found.
@@ -263,6 +287,7 @@ cataloging.")
   (unless (member (process-status cached-unidata-process) '(run))
     (setq cached-unidata-process (get-buffer-process (car unidata-buffer-list))))
   cached-unidata-process)
+
 
 
 (defun unidata-check-process (proc) t)
@@ -380,7 +405,7 @@ cataloging.")
   (let* ((str string)
          (cmd-list (split-string str "[ \t]+"))
          (word cmd-list))
-    (defun unidata-check-command-list cmd-list)
+    (unidata-check-command-list cmd-list)
     (if unidata-auto-upcase-commands
         (setq str (unidata-upcase-command-words str)))
     (setq cmd-list (split-string str "[ \t]+"))
@@ -390,11 +415,11 @@ cataloging.")
             (if (and (stringp (car cmd-list))(cdr hook) (functionp (cdr hook))
                      (string-match (car hook) (car cmd-list)))
                 (setq cmd-list (funcall (cdr hook) cmd-list))))))
-    (mapconcat 'identity cmd-list " ")))
+    (and cmd-list (mapconcat 'identity cmd-list " "))))
 
 (defun unidata-send (proc string)
   (let ((cmd  (unidata-filter-command string)))
-    (unless nil ;; (or (not cmd) (string= cmd ""))
+    (unless (or (not cmd) (and nil (string= cmd "")) )
       (comint-send-string proc cmd)
       (comint-send-string proc unidata-new-line))))
 
@@ -550,11 +575,11 @@ copied back into the original file when finished editing."
 ;; I originally quoted the table (file) names in the command too, but
 ;; that gave a syntax error in Unidata; apparently you can only quote
 ;; the record ids.  Unidata is so stupid.
-(defun unidata-make-edit-record-command (table-name record-id &optional dict)
+(defun unidata-make-edit-record-command (table-name record-id tmp-file &optional dict)
   (let ((cmd-string
          (format "COPY FROM %s %s TO %s \"%s\",\"%s\" OVERWRITING"
                  (if dict "DICT" "") table-name unidata-temp-record-dir
-                 record-id  (unidata-make-tmpfile-name table-name record-id dict))))
+                 record-id  tmp-file)))
     cmd-string))
          
 ;; (defun unidata-make-save-record-command (tmp-file)
@@ -642,7 +667,8 @@ temporary file is deleted when the buffer is killed unless
   (interactive "sTable Name:\nsRecord-Id:")
   (let* ((buffer (or u2-buffer (current-buffer)))
          (u2proc (get-buffer-process buffer))
-         (edit-cmd (unidata-make-edit-record-command table-name rec-id dict))
+         (tmp-file (unidata-make-tmpfile-name table-name rec-id dict))
+         (edit-cmd (unidata-make-edit-record-command table-name rec-id tmp-file dict))
          (keep-trying t))
     (unidata-send-command u2proc edit-cmd)
     (while keep-trying
@@ -651,11 +677,10 @@ temporary file is deleted when the buffer is killed unless
       (if (string-match "records copied" (unidata-get-last-output))
           (setq keep-trying nil)))
     (if (string-match "records copied" (unidata-get-last-output))
-        (progn
+        (save-excursion
           (find-file-other-window (concat unidata-full-path "/"
                                           unidata-temp-record-dir "/"
-                                          (unidata-make-tmpfile-name
-                                           table-name rec-id dict)))
+                                          tmp-file))
           ;; Now in the record buffer. Setup local variable to point
           ;; to unidata process, for saving later.
           (make-local-variable 'unidata-process)
@@ -669,7 +694,8 @@ temporary file is deleted when the buffer is killed unless
                         (lambda ()
                           (delete-file (buffer-file-name)))
                         nil t)))
-      (error "Copy failed: %s,%s" table-name rec-id)) ))
+      (error "Copy failed: %s,%s" table-name rec-id)) )
+  nil)
 
 
 
@@ -867,6 +893,9 @@ record."
 
 ;;
 ;; $Log$
+;; Revision 1.6  2006/08/09 19:18:23  numeromancer
+;; BASIC alignment additions, and corrections to record editing.
+;;
 ;; Revision 1.5  2006/03/06 03:33:18  numeromancer
 ;; The record editing code was failing with temp file names longer than
 ;; 32 characters because of Unidata's limit on IDs.  I changed the code to
