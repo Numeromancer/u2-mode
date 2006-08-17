@@ -277,16 +277,26 @@ cataloging.")
 ;; TODO: Change to search through the list, comparing the path of
 ;; FILE-NAME with each unidata account path, picking that buffer which
 ;; has the unidata account in which FILE-NAME is found.
-(defun get-unidata-process (file-name)
+(defun get-unidata-process (file-name-or-buffer)
   "Get the unidata process best associated with FILE-NAME."
-  (unless (and (boundp 'cached-unidata-process)
-               (processp cached-unidata-process))
-    (make-local-variable 'cached-unidata-process)
-    (setq cached-unidata-process
-          (get-buffer-process (car unidata-buffer-list))))
-  (unless (member (process-status cached-unidata-process) '(run))
-    (setq cached-unidata-process (get-buffer-process (car unidata-buffer-list))))
-  cached-unidata-process)
+  (let (buffer file-name)
+    (when (stringp file-name-or-buffer)
+      (setq buffer (get-buffer file-name-or-buffer))
+      (and buffer
+          (setq file-name-or-buffer buffer)))
+    (when (bufferp file-name-or-buffer)
+      (setq buffer file-name-or-buffer)
+      (setq file-name (buffer-file-name buffer)))
+    (or buffer (setq file-name file-name-or-buffer))
+    (unless (and (boundp 'cached-unidata-process)
+                 (processp cached-unidata-process))
+      (make-local-variable 'cached-unidata-process)
+      (setq cached-unidata-process
+            (get-buffer-process (car unidata-buffer-list))))
+    (unless (member (process-status cached-unidata-process) '(run))
+      (setq cached-unidata-process
+            (get-buffer-process (car unidata-buffer-list))))
+    cached-unidata-process))
 
 
 
@@ -312,13 +322,21 @@ cataloging.")
       (message "Sending command to remote shell: %s" cmd)
       (ub-tcl-send-command p user host cmd))))
 
+;; Don't upcase args with slashes or commas, as these are 
+;; case-sensitive file names (the comma is for Unidata LD 
+;; file types.  It is also used to separate id's in copy
+;; commands, which will also be case sensitive. For convenience, we
+;; don't upcase double-quoted strings, but we do upcase single quoted
+;; strings. Quotes are unconsistently accepted by unidata commands.
 (defun unidata-upcase-command-words (string)
   (let ((mk 0) ms)
     (while (string-match  unidata-command-word-regexp string mk)
       (setq mk (match-end 0))
       (setq ms (match-string 0 string))
-      (unless (or (char-equal (aref ms 0) ?\")
-                  (save-match-data (string-match "/" ms)))
+      (unless (save-match-data
+                (or (char-equal (aref ms 0) ?\")
+                    (string-match "/" ms)
+                    (string-match "," ms)))
         (setq string (replace-match (upcase ms) 1 1 string)))))
   string)
 
@@ -893,6 +911,12 @@ record."
 
 ;;
 ;; $Log$
+;; Revision 1.7  2006/08/17 12:54:58  numeromancer
+;; Changed unidata to not upcase ECL words with a comma in them, since some
+;; tables have these in them (LD types).  Also, added some stuff to help
+;; move to compiling and such with information saved with a buffer when files
+;; are opened with EDIT ....
+;;
 ;; Revision 1.6  2006/08/09 19:18:23  numeromancer
 ;; BASIC alignment additions, and corrections to record editing.
 ;;

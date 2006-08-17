@@ -226,6 +226,20 @@ on the Unidata server."
 
 
 
+(defun unibasic-catalog-buffer (buffer)
+  (let* ((buffer (or buffer (current-buffer)))
+         (fn (buffer-file-name buffer)))
+    (unibasic-catalog-file (get-unidata-process fn) fn)))
+
+(defun unibasic-compile-buffer (buffer)
+  (let* ((buffer (or buffer (current-buffer)))
+         (fn (buffer-file-name buffer)))
+    (unibasic-compile-file (get-unidata-process fn))))
+
+(defun unibasic-run-buffer (buffer)
+  (let* ((buffer (or buffer (current-buffer)))
+         (fn (buffer-file-name buffer)))
+    (unibasic-run-file (get-unidata-process fn) fn)))
 
 (defun unibasic-catalog ()
   (interactive)
