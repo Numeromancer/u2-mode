@@ -155,7 +155,7 @@ a `/' in them somewhere) will not be affected."
   :type 'boolean
   :group 'unidata)
 (defcustom unidata-command-word-regexp
-  "\\b\\(?:[/._]\\|\\w\\)+\\b\\|\"[^\"]*\""
+  "\\b\\(?:[/._,]\\|\\w\\)+\\b\\|\"[^\"]*\""
   "Regular expression matching a word in a TCL command line.
 This effects only movement commands on the command line."
   :type 'regexp
@@ -911,6 +911,10 @@ record."
 
 ;;
 ;; $Log$
+;; Revision 1.8  2006/08/17 14:09:38  numeromancer
+;; Changed command word regexp so commas are considered part of a command
+;; word.  This allows LD paths to be considered command words.
+;;
 ;; Revision 1.7  2006/08/17 12:54:58  numeromancer
 ;; Changed unidata to not upcase ECL words with a comma in them, since some
 ;; tables have these in them (LD types).  Also, added some stuff to help
