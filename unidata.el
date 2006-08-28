@@ -48,7 +48,7 @@
 (require 'comint)
 (require 'telnet)
 (require 'u2-cache)
-(require 'cl)
+(eval-when-compile (require 'cl))
 
 (defconst unidata-rcs-version
   "@(#)$Id$"
@@ -278,7 +278,7 @@ cataloging.")
 ;; FILE-NAME with each unidata account path, picking that buffer which
 ;; has the unidata account in which FILE-NAME is found.
 (defun get-unidata-process (file-name-or-buffer)
-  "Get the unidata process best associated with FILE-NAME."
+  "Get the unidata process best associated with FILE-NAME-OR-BUFFER."
   (let (buffer file-name)
     (when (stringp file-name-or-buffer)
       (setq buffer (get-buffer file-name-or-buffer))
@@ -298,6 +298,7 @@ cataloging.")
             (get-buffer-process (car unidata-buffer-list))))
     cached-unidata-process))
 
+(defalias 'unidata-get-process (symbol-function 'get-unidata-process))
 
 
 (defun unidata-check-process (proc) t)
@@ -592,7 +593,7 @@ copied back into the original file when finished editing."
 
 ;; I originally quoted the table (file) names in the command too, but
 ;; that gave a syntax error in Unidata; apparently you can only quote
-;; the record ids.  Unidata is so stupid.
+;; the record ids. 
 (defun unidata-make-edit-record-command (table-name record-id tmp-file &optional dict)
   (let ((cmd-string
          (format "COPY FROM %s %s TO %s \"%s\",\"%s\" OVERWRITING"
@@ -715,7 +716,8 @@ temporary file is deleted when the buffer is killed unless
       (error "Copy failed: %s,%s" table-name rec-id)) )
   nil)
 
-
+(put 'unidata-process 'permanent-local t)
+(put 'unidata-record-path 'permanent-local t)
 
 (defun unidata-save-record (&optional buffer)
   "Saves the record opened with `unidata-edit-record'.
@@ -911,6 +913,11 @@ record."
 
 ;;
 ;; $Log$
+;; Revision 1.9  2006/08/28 19:23:01  numeromancer
+;; I am unifying the relation between buffers which are U2 records and the
+;; U2 process, to make it easier to create new commands to work on such
+;; buffers.  For now, this is just for the compile/catalog/run commands.
+;;
 ;; Revision 1.8  2006/08/17 14:09:38  numeromancer
 ;; Changed command word regexp so commas are considered part of a command
 ;; word.  This allows LD paths to be considered command words.

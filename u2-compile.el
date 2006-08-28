@@ -1,4 +1,5 @@
-;; u2-compile.el -- Copyright (C) 2005 Timothy M. Schaeffer <tschaef@sbcglobal.net>
+;; u2-compile.el -- 
+;; Copyright (C) 2005 Timothy M. Schaeffer <tschaef@sbcglobal.net>
 ;;
 ;; Functions for compiling UniBasic source files from EMACS.
 ;;
@@ -54,11 +55,11 @@
 (require 'unibasic)
 
 (defcustom unibasic-basic-cmd-string "BASIC"
-  "Unidata command used to compile UniBasic source.
-If you have written another program or paragraph or proc to handle
-compiling Unibasic programs (while doing other things, like running the
-source through `m4' or some other macro processor first), you can put
-the name of that command here."
+  "Unidata command used to compile UniBasic source.  If you have
+written another program or paragraph or proc to handle compiling
+Unibasic programs (while doing other things, like running the source
+through `m4' or some other macro processor first), you can put the
+name of that command here."
   :type 'string
   :group 'unidata)
 
@@ -73,10 +74,11 @@ the name of that command here."
 
 
 (defcustom unibasic-basic-arg-list nil
-  "A list of strings of command line arguments for compiling.
-The list will be appended as a space separated list of arguments to the end of
-the compile command line in ECL.  Usually for specifying debugging arguments to
-the compiler, since Unibasic provides little else."
+  "A list of strings of command line arguments for compiling.  The
+list will be appended as a space separated list of arguments to the
+end of the compile command line in ECL.  Usually for specifying
+debugging arguments to the compiler, since Unibasic provides little
+else."
   :group 'unidata
   :type '(repeat (string)))
 
@@ -130,16 +132,20 @@ command here, and it will be used instead of the default `RUN'"
     (define-key-after unibasic-menu-map [ub-run]
       '("Run this program" . unibasic-run) t)
 
-    (setq unibasic-catalog-menu-map (make-sparse-keymap "Unibasic Cataloging"))
+    (setq unibasic-catalog-menu-map
+          (make-sparse-keymap "Unibasic Cataloging"))
     (define-key unibasic-menu-map [catalog-menu]
       (cons "Unibasic Cataloging" unibasic-catalog-menu-map))
 
     (define-key unibasic-catalog-menu-map [unidata-catalog-global]
-      '(menu-item "Catalog Globally" (lambda () (setq unibasic-catalog-method 'global))))
+      '(menu-item "Catalog Globally" 
+                  (lambda () (setq unibasic-catalog-method 'global))))
     (define-key unibasic-catalog-menu-map [unidata-catalog-local]
-      '(menu-item "Catalog Locally" (lambda () (setq unibasic-catalog-method 'local))))
+      '(menu-item "Catalog Locally" 
+                  (lambda () (setq unibasic-catalog-method 'local))))
     (define-key unibasic-catalog-menu-map [unidata-catalog-direct]
-      '(menu-item "Catalog Directly" (lambda () (setq unibasic-catalog-method 'direct))))
+      '(menu-item "Catalog Directly" 
+                  (lambda () (setq unibasic-catalog-method 'direct))))
     
     )
 
@@ -153,42 +159,33 @@ command here, and it will be used instead of the default `RUN'"
 
 (defvar unibasic-source-table nil)
 
+;; TODO: Find a way to populate this programmatically from the VOC.
+(defvar unibasic-dir-to-table-alist ()
+  "Map directory names onto Unidata tables.
+The keys are regular expressions against which directory names will be
+matched.  If they match, `unibasic-get-source-table' will return the
+cdr as the table name.")
+
 (defun unibasic-get-source-table (file-name)
-  (cond ((string-match ".*/\\([^/]+\\)/[^/]*\\'" file-name)
-         (match-string 1 file-name))
-        (unibasic-source-table
-         unibasic-source-table)
-        (t unibasic-default-source-table)))
+  "Find the U2 table associated with FILE-NAME.
+FILE-NAME must be a file which maps onto a U2 table in the
+VOC. Mappings from directories to table names can be stored in
+`unibasic-dir-to-table-alist' (especially helpful for LD type
+tables).  If it is not found there, the last part of the directory
+name is used as the table name, which will work for DIR type files
+mapped to subdirectories of the current U2 account. If FILE-NAME has
+no directory part, `unibasic-default-source-table' is used as a last
+resort."
+  (let ((dir-name (file-name-directory file-name)))
+    (dolist (a unibasic-dir-to-table-alist)
+      (save-match-data
+        (if (string-match (car a) dir-name)
+            (return (cdr a)))))
+    (cond ((string-match ".*/\\([^/]+\\)/[^/]*\\'" file-name)
+           (match-string 1 file-name))
+          (unibasic-source-table unibasic-source-table)
+          (t unibasic-default-source-table))))
 
-(defun unibasic-compile-command (file)
-  (mapconcat 'identity
-             (append (list unibasic-basic-cmd-string
-                           (unibasic-get-source-table file)
-                           (file-name-nondirectory file))
-                     unibasic-basic-arg-list)
-             " "))
-
-
-(defun unibasic-make-run-command (file)
-  (mapconcat 'identity
-             (list unibasic-run-command
-                   (unibasic-get-source-table file)
-                   (file-name-nondirectory file)
-                   "\n")
-             " "))
-
-(defun unibasic-run-file (ud-proc file &optional options-string)
-  (unidata-send-command
-   ud-proc
-   unibasic-run-command
-   (unibasic-get-source-table file)
-   (file-name-nondirectory file)
-   options-string))
-
-(defun unibasic-compile-file (ud-proc file &optional catalog-p)
-  (unidata-send-command
-   ud-proc
-   (unibasic-compile-command file)))
 
 (defcustom unibasic-catalog-method 'local
   "Method of cataloguing when cataloguing a UniBasic program.
@@ -199,78 +196,162 @@ all Catalog commands."
   :type '(choice (const local) (const global) (const direct))
   :group 'unibasic)
 
-(defun unibasic-catalog-file (ud-proc file)
-  "Sends (with FORCE) command to catalog the program associated with FILE
-on the Unidata server."
-  (unidata-send-command
+
+
+;; Commands which define actions on unidata records
+             
+(defvar unidata-record-commands ())
+
+(defun unidata-command-on-record (command ud-proc table recid &rest opt)
+  "Perform a command on a Unidata Record with RECID in TABLE.  COMMAND
+can be a string, it is used as a format string called with TABLE and
+RECID, in that order, as arguments to `format'. If it is a function,
+that function is called with TABLE and RECID as arguments to get the
+command string sent to the Unidata process.  If it is a symbol, it is
+used as a key to `unidata-record-commands', and the associated value
+is used as if it were passed as COMMAND; if COMMAND is not there
+found, and the symbol has a function value, the function value of
+command is used as if it were passed as COMMAND; otherwise, it's name
+is converted to uppercase and a the string \"COMMAND TABLE RECID\" is
+used as the command string. As an example of this last, if the symbol
+'do-stuff is passed, is not found in `undata-record-commands' and has
+no function value, the command \"DO-STUFF TABLE RECID\" will be sent
+to Unidata."
+  (let (cmd-string)
+    (while (null cmd-string)
+      (etypecase command
+        (string (setf cmd-string (format command table recid)))
+        (symbol (let ((a (assoc command unidata-record-commands)))
+                  (cond (a (setf command (cdr a)))
+                        ((functionp command) (setf command (symbol-function command)))
+                        (t (setf command (concat (upcase (symbol-name command)) " %s %s"))))))
+        (function (setf cmd-string (apply command (list table recid opt))))
+        (t (signal 'wrong-type-argument (list command)))))
+    (setf cmd-string cmd-string)
+    (unidata-send-command ud-proc cmd-string)))
+
+
+(defun unidata-get-buffer-record-path (buffer)
+  (with-current-buffer buffer
+    (or (and (local-variable-p 'unidata-record-path)
+             unidata-record-path)
+        (let ((file-name (buffer-file-name buffer)))
+          (list (unibasic-get-source-table file-name)
+                (file-name-nondirectory file-name)
+                nil)))))
+
+
+
+(defun unidata-command-on-buffer (command buffer &optional opt)
+  "Run COMMAND as a U2 command on BUFFER.  The record path for buffer
+is found by calling `unidata-get-buffer-record-path' on it, and this
+is sent to `unidata-command-on-record' with COMMAND.  OPT is passed to
+the command after the table-name and record id."
+  (let* ((buffer (or buffer (current-buffer)))
+         (recpath (unidata-get-buffer-record-path buffer))
+         (udproc (unidata-get-process buffer)))
+    (with-current-buffer buffer
+      (unidata-command-on-record
+       command
+       udproc
+       (car unidata-record-path)
+       (cadr unidata-record-path) opt)) ) )
+
+
+(defun unidata-command-on-file (command ud-proc file-name &optional opt)
+  "Find a unidata record for FILE-NAME, and run COMMAND on it.
+`unibasic-get-source-table' will be used to find the table name
+associated with FILE-NAME, and the file name sans directory will be
+used as the record id.  COMMAND should be one defined with
+`define-unidata-record-action.'" 
+  (unidata-command-on-record
+   command
    ud-proc
-   unibasic-catalog-command
    (unibasic-get-source-table file)
-   (file-name-nondirectory file)
-   (cond ((equal unibasic-catalog-method 'local) "LOCAL")
-         ((equal unibasic-catalog-method 'direct) "DIRECT")
-         (t ""))
- "FORCE"
-   ))
-
-
-;; TODO: Create a function which will get the directory, or parent
-;; directory of the unibasic source file and find a unidata process
-;; with that directory as it's current account.  This is necessary
-;; because there could be more than one unidata process running,
-;; and/or unidata accounts may have performed a LOGTO.  unidata.el
-;; should contain a function to search for a unidata process by
-;; /current/ account path.  If no such process can be found, signal an
-;; error. All references to unidata-process should be eliminated; this variable
-;; is now buffer-local to the buffer running the unidata command line.
+   (file-name-nondirectory file) opt))
 
 
 
-(defun unibasic-catalog-buffer (buffer)
-  (let* ((buffer (or buffer (current-buffer)))
-         (fn (buffer-file-name buffer)))
-    (unibasic-catalog-file (get-unidata-process fn) fn)))
+(defmacro define-unidata-record-action (name args &rest body)
+  "Define an action which can be acted upon a UniData Record.  If this
+is defined just a string, it will be used as a format string, and
+format will be applied to the table, record-id and the &rest of the
+args, in that order.  Otherwise, it should be a named lambda form,
+which takes the table, record-id, any optional arguments it needs, and
+returns a string which will be passed to the Unidata process as a
+command."
+  (setf unidata-record-commands 
+        (cons (cons name
+                    (cond ((and (null body) (stringp args)) args)
+                          (t `(lambda ,args ,@body))))
+              unidata-record-commands))
+  `',name)
 
-(defun unibasic-compile-buffer (buffer)
-  (let* ((buffer (or buffer (current-buffer)))
-         (fn (buffer-file-name buffer)))
-    (unibasic-compile-file (get-unidata-process fn))))
+;; Unidata commands are very inconsistent with quotes on arguments.
+;; Some commands will require it for some arguments, will accept them
+;; but not require them for others, and reject them for others, even
+;; if they are the same kind of item, like a record id.  Ugly. 
 
-(defun unibasic-run-buffer (buffer)
-  (let* ((buffer (or buffer (current-buffer)))
-         (fn (buffer-file-name buffer)))
-    (unibasic-run-file (get-unidata-process fn) fn)))
 
-(defun unibasic-catalog ()
-  (interactive)
-  (let ((fn (buffer-file-name (current-buffer))))
-    (unibasic-catalog-file (get-unidata-process fn) fn)))
+(defun unibasic-get-object-table (table)
+  "Get the object table associated with UniBasic source table TABLE.
+If table is found in `unibasic-table-to-object-table-alist', that is
+used. Otherwise `unibasic-table-to-object-table-format' is used with
+format, if non-nil.  TABLE itself is returned as a last resort."
+  (let ((as (assoc table unibasic-table-to-object-table-alist)))
+    (cond 
+     (as (cdr as))
+     (unibasic-table-to-object-table-format
+      (format unibasic-table-to-object-table-format  table))
+     (t table))))
+
+(define-unidata-record-action compile (table recid &optional objtable&rest rest)
+  (flet ((q (arg) (concat  arg)))
+    (let ((_ " ")
+          (objtable (or objtable (unibasic-get-object-table table)))
+      (concat "BASIC" _ (q table) _ "TO" _ (q objtable) "OBJ" _ (q recid)))))
+
+(defvar unibasic-table-to-object-table-alist ()
+  "Alist matching source tables to object tables for Unibasic files.")
+
+(defvar unibasic-table-to-object-table-format "%sOBJ")
+
+(define-unidata-record-action catalog (table recid &optional objtable scope forcep)
+  (flet ((q (arg) (concat arg)))
+    (let ((scope (if scope (upcase (format "%s" scope)) ""))
+          (force (if t "FORCE" ""))
+          (objtable (if objtable objtable (unibasic-get-object-table table)))
+          (_ " "))
+      (concat "CATALOG" _  (q objtable) _ (q recid) _ scope _  force))))
+
+
+(define-unidata-record-action run (table recid &optional args)
+  (let ((_ " "))
+    (concat "RUN" _ table _ recid _ (mapconcat 'identity args _))))
 
 (defun unibasic-compile ()
   (interactive)
-  (let* ((fn (buffer-file-name (current-buffer))))
-    (unibasic-compile-file (get-unidata-process fn) fn)))
+  (let ((buffer (current-buffer)))
+    (unidata-command-on-buffer 'compile buffer)))
 
 
-;; I'm getting deja-vu.  I think there is an underlying abstraction here.
-;; TODO: prompt form arguments
-(defun unibasic-run ()
+(defun unibasic-catalog ()
   (interactive)
-  (let* ((fn (buffer-file-name (current-buffer))))
-    (unibasic-run-file (get-unidata-process fn) fn)))
+  (let ((buffer (current-buffer)))
+    (unidata-command-on-buffer 'catalog buffer)))
 
+(defun unibasic-run ()
+  (interactive "sArguments:")
+  (let ((buffer (current-buffer)))
+    (unidata-command-on-buffer 'catalog buffer)))
 
 (defun unibasic-compile-and-catalog ()
+  "Compile and catalog the current UniBasic buffer."
   (interactive)
-  (let* ((fn-buf (current-buffer))
-         (fn (buffer-file-name fn-buf))
-         (u2-process (get-unidata-process fn))
-         (u2-buffer (process-buffer u2-process)))
-    (save-excursion
-      (unibasic-compile-file u2-process fn)
-      (with-current-buffer u2-buffer
-        ;; TODO: Check status of compile first
-        (unibasic-catalog-file u2-process fn)))))
+  (save-excursion
+    (unidata-command-on-buffer 'compile buffer)
+    ;; TODO: Check status of compile first
+    (unidata-command-on-buffer 'catalog buffer)))
 
 (defun host-is-this-host (host)
   nil)
