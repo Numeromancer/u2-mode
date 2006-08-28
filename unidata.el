@@ -863,6 +863,8 @@ record."
     (send-string process (concat "open " host "\n"))
     (setq telnet-count unidata-initial-count)))
 
+(put 'unidata-process 'permanent-local t)
+(put 'unidata-record-path 'permanent-local t)
 
 (defun unidata-open-local-connection (path)
   (let* ((comint-delimiter-argument-list '(?\  ?\t))
@@ -913,6 +915,9 @@ record."
 
 ;;
 ;; $Log$
+;; Revision 1.10  2006/08/28 19:26:08  numeromancer
+;; Fixed conflict; same change made in two sandboxes.
+;;
 ;; Revision 1.9  2006/08/28 19:23:01  numeromancer
 ;; I am unifying the relation between buffers which are U2 records and the
 ;; U2 process, to make it easier to create new commands to work on such
