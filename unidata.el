@@ -704,8 +704,10 @@ temporary file is deleted when the buffer is killed unless
           ;; to unidata process, for saving later.
           (make-local-variable 'unidata-process)
           (make-local-variable 'unidata-record-path)
+          (make-local-variable 'u2-buffer buffer)
           (setq unidata-process u2proc)
           (setq unidata-record-path (list table-name rec-id dict))
+          (setq u2-buffer buffer)
           (rename-buffer (concat table-name ":" rec-id))
           (add-hook 'after-save-hook 'unidata-save-record nil t)
           (unless unidata-keep-temps-on-killing-buffer
@@ -716,6 +718,7 @@ temporary file is deleted when the buffer is killed unless
       (error "Copy failed: %s,%s" table-name rec-id)) )
   nil)
 
+(put 'u2-buffer 'permanent-local t)
 (put 'unidata-process 'permanent-local t)
 (put 'unidata-record-path 'permanent-local t)
 
@@ -915,6 +918,9 @@ record."
 
 ;;
 ;; $Log$
+;; Revision 1.11  2006/09/01 14:44:14  numeromancer
+;; Added permanant local variable u2-buffer.
+;;
 ;; Revision 1.10  2006/08/28 19:26:08  numeromancer
 ;; Fixed conflict; same change made in two sandboxes.
 ;;
