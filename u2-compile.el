@@ -197,12 +197,6 @@ resort."
 
 
 
-(define-unidata-record-action compile (table recid  &rest rest)
-  (let ((_ " ")
-        (objtable (or (and (rest (car rest)))
-                      (unibasic-get-object-table table))))
-    (concat "BASIC" _  table _ "TO" _  objtable _  recid)))
-
 (defvar unibasic-table-to-object-table-alist ()
   "Map source table names to object tables.  The keys are regular
 expressions against which source table names will be matched.  If they
@@ -333,6 +327,12 @@ command."
 ;; Some commands will require it for some arguments, will accept them
 ;; but not require them for others, and reject them for others, even
 ;; if they are the same kind of item, like a record id.  Ugly. 
+
+(define-unidata-record-action compile (table recid  &rest rest)
+  (let ((_ " ")
+        (objtable (or (and (rest (car rest)))
+                      (unibasic-get-object-table table))))
+    (concat "BASIC" _  table _ "TO" _  objtable _  recid)))
 
 
 (define-unidata-record-action catalog (table recid &optional objtable scope forcep)
