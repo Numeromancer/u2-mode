@@ -159,6 +159,18 @@ command here, and it will be used instead of the default `RUN'"
 
 (defvar unibasic-source-table nil)
 
+
+(defun* %u2-alist-get-string (string alist)
+  (save-match-data
+    (dolist (a alist)
+      (if (string-match (car a) string)
+          (let ((c (cdr a)))
+            (etypecase c
+              (string (return-from %u2-alist-get-string (replace-match c nil nil string)))
+              (function (return-from %u2-alist-get-string (apply  c string))))))))
+  nil)
+  
+
 ;; TODO: Find a way to populate this programmatically from the VOC.
 (defvar unibasic-dir-to-table-alist ()
   "Map directory names onto Unidata tables.
@@ -177,14 +189,44 @@ mapped to subdirectories of the current U2 account. If FILE-NAME has
 no directory part, `unibasic-default-source-table' is used as a last
 resort."
   (let ((dir-name (file-name-directory file-name)))
-    (dolist (a unibasic-dir-to-table-alist)
-      (save-match-data
-        (if (string-match (car a) dir-name)
-            (return (cdr a)))))
-    (cond ((string-match ".*/\\([^/]+\\)/[^/]*\\'" file-name)
+    (cond ((%u2-alist-get-string dir-name unibasic-dir-to-table-alist))
+          ((string-match ".*/\\([^/]+\\)/[^/]*\\'" file-name)
            (match-string 1 file-name))
           (unibasic-source-table unibasic-source-table)
-          (t unibasic-default-source-table))))
+          (t (unibasic-default-source-table file-name)))))
+
+
+
+(define-unidata-record-action compile (table recid  &rest rest)
+  (let ((_ " ")
+        (objtable (or (and (rest (car rest)))
+                      (unibasic-get-object-table table))))
+    (concat "BASIC" _  table _ "TO" _  objtable _  recid)))
+
+(defvar unibasic-table-to-object-table-alist ()
+  "Map source table names to object tables.  The keys are regular
+expressions against which source table names will be matched.  If they
+match, `unibasic-get-object-table' will return the cdr as the table
+name, after doing a regex replace. So the entry \(\"TABLE\\(.*\\)\"
+. \"TABLE\\1OBJ\"\) would match \"TABLEXYZ\" to \"TABLEXYZOBJ\".  The
+cdr can also be a function, %u2-alist-get-string will call with its
+argument when it matches.")
+
+
+(defun unibasic-get-object-table (table)
+  "Get the object table associated with UniBasic source table TABLE.
+If table is matched in `unibasic-table-to-object-table-alist', that is
+used. Otherwise `unibasic-table-to-object-table-format' is used with
+format, if non-nil.  TABLE itself is returned as a last resort."
+  (cond 
+   ((%u2-alist-get-string table unibasic-table-to-object-table-alist))
+   (unibasic-table-to-object-table-format
+    (format unibasic-table-to-object-table-format  table))
+   (t table)))
+
+
+(defvar unibasic-table-to-object-table-format nil)
+
 
 
 (defcustom unibasic-catalog-method 'local
@@ -254,8 +296,8 @@ the command after the table-name and record id."
       (unidata-command-on-record
        command
        udproc
-       (car unidata-record-path)
-       (cadr unidata-record-path) opt)) ) )
+       (car recpath)
+       (cadr recpath) opt)) ) )
 
 
 (defun unidata-command-on-file (command ud-proc file-name &optional opt)
@@ -292,29 +334,6 @@ command."
 ;; but not require them for others, and reject them for others, even
 ;; if they are the same kind of item, like a record id.  Ugly. 
 
-
-(defun unibasic-get-object-table (table)
-  "Get the object table associated with UniBasic source table TABLE.
-If table is found in `unibasic-table-to-object-table-alist', that is
-used. Otherwise `unibasic-table-to-object-table-format' is used with
-format, if non-nil.  TABLE itself is returned as a last resort."
-  (let ((as (assoc table unibasic-table-to-object-table-alist)))
-    (cond 
-     (as (cdr as))
-     (unibasic-table-to-object-table-format
-      (format unibasic-table-to-object-table-format  table))
-     (t table))))
-
-(define-unidata-record-action compile (table recid &optional objtable&rest rest)
-  (flet ((q (arg) (concat  arg)))
-    (let ((_ " ")
-          (objtable (or objtable (unibasic-get-object-table table)))
-      (concat "BASIC" _ (q table) _ "TO" _ (q objtable) "OBJ" _ (q recid)))))
-
-(defvar unibasic-table-to-object-table-alist ()
-  "Alist matching source tables to object tables for Unibasic files.")
-
-(defvar unibasic-table-to-object-table-format "%sOBJ")
 
 (define-unidata-record-action catalog (table recid &optional objtable scope forcep)
   (flet ((q (arg) (concat arg)))
