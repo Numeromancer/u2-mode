@@ -4,7 +4,7 @@
 
 ;; Copyright (C) 2003, 2004, 2005 Free Software Foundation, Inc.
 
-;; Author: Kai Gro,A_(Bjohann <kai.grossjohann@gmx.net>
+;; Author: Tim Schaeffer <numeromancer@users.sourceforge.net>
 ;; Keywords: comm, processes
 
 ;; This file is part of GNU Emacs.

@@ -5,6 +5,7 @@
 ;; Time-stamp: <2005-12-29 14:05:50 timothy>
 ;;
 ;; Author: Pat Thoyts <pat@zsplat.freeserve.co.uk>
+;; Author: Tim Schaeffer <numeromancer@users.sourceforge.net>
 ;; Version: 1.10   (27 Aug 1999)
 ;; Maintainer: Pat Thoyts <pat@zsplat.freeserve.co.uk>
 ;; Keywords: languages
@@ -1425,6 +1426,11 @@ character and not as an operator.")
 
 ;;
 ;; $Log$
+;; Revision 1.7  2006/09/05 17:39:17  numeromancer
+;; Fixed a bug from left-over local q function, and with different arg specs
+;; for extra args for u2-compile actions.  Changed email address to my
+;; sourceforge address.
+;;
 ;; Revision 1.6  2006/08/09 19:18:23  numeromancer
 ;; BASIC alignment additions, and corrections to record editing.
 ;;

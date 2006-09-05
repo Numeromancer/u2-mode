@@ -2,7 +2,7 @@
 ;;
 ;; Major mode for working with UniBasic files in EMACS.
 ;;
-;; Author: Timothy M. Schaeffer <tschaef@sbcglobal.net>
+;; Author: Tim Schaeffer <numeromancer@users.sourceforge.net>
 ;; Version: 1.10   Time-stamp: <2005-11-22 23:24:03 timothy>
 ;; Maintainer: Timothy M. Schaeffer <tschaef@sbcglobal.net>
 ;; Keywords: languages database telnet
@@ -918,6 +918,11 @@ record."
 
 ;;
 ;; $Log$
+;; Revision 1.12  2006/09/05 17:39:17  numeromancer
+;; Fixed a bug from left-over local q function, and with different arg specs
+;; for extra args for u2-compile actions.  Changed email address to my
+;; sourceforge address.
+;;
 ;; Revision 1.11  2006/09/01 14:44:14  numeromancer
 ;; Added permanant local variable u2-buffer.
 ;;

@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2005  Free Software Foundation, Inc.
 
-;; Author: Timothy M. Schaeffer <tschaef@sbcglobal.net>
+;; Author: Tim Schaeffer <numeromancer@users.sourceforge.net>
 ;; Time-stamp: <2005-12-17 11:02:20 timothy>
 ;; Keywords: help, comm, tools, processes
 

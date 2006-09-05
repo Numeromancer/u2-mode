@@ -3,7 +3,7 @@
 ;;
 ;; Functions for compiling UniBasic source files from EMACS.
 ;;
-;; Author: Timothy M. Schaeffer <tschaef@sbcglobal.net>
+;; Author: Tim Schaeffer <numeromancer@users.sourceforge.net>
 ;; Version: 1.0  
 ;; Time-stamp: <2005-11-16 19:21:48 timothy>
 ;; Maintainer: Timothy M. Schaeffer <tschaef@sbcglobal.net>
@@ -278,7 +278,7 @@ to Unidata."
 
 
 
-(defun unidata-command-on-buffer (command buffer &optional opt)
+(defun unidata-command-on-buffer (command buffer &optional rest)
   "Run COMMAND as a U2 command on BUFFER.  The record path for buffer
 is found by calling `unidata-get-buffer-record-path' on it, and this
 is sent to `unidata-command-on-record' with COMMAND.  OPT is passed to
@@ -287,11 +287,11 @@ the command after the table-name and record id."
          (recpath (unidata-get-buffer-record-path buffer))
          (udproc (unidata-get-process buffer)))
     (with-current-buffer buffer
-      (unidata-command-on-record
-       command
-       udproc
-       (car recpath)
-       (cadr recpath) opt)) ) )
+      (apply 'unidata-command-on-record
+             command
+             udproc
+             (car recpath)
+             (cadr recpath) rest)) ) )
 
 
 (defun unidata-command-on-file (command ud-proc file-name &optional opt)
@@ -336,12 +336,11 @@ command."
 
 
 (define-unidata-record-action catalog (table recid &optional objtable scope forcep)
-  (flet ((q (arg) (concat arg)))
-    (let ((scope (if scope (upcase (format "%s" scope)) ""))
-          (force (if t "FORCE" ""))
-          (objtable (if objtable objtable (unibasic-get-object-table table)))
-          (_ " "))
-      (concat "CATALOG" _  (q objtable) _ (q recid) _ scope _  force))))
+  (let ((scope (if scope (upcase (format "%s" scope)) ""))
+        (force (if t "FORCE" ""))
+        (objtable (if objtable objtable (unibasic-get-object-table table)))
+        (_ " "))
+    (concat "CATALOG" _  objtable _ recid _ scope _  force)))
 
 
 (define-unidata-record-action run (table recid &optional args)
@@ -367,10 +366,11 @@ command."
 (defun unibasic-compile-and-catalog ()
   "Compile and catalog the current UniBasic buffer."
   (interactive)
-  (save-excursion
-    (unidata-command-on-buffer 'compile buffer)
-    ;; TODO: Check status of compile first
-    (unidata-command-on-buffer 'catalog buffer)))
+  (let ((buffer (current-buffer)))
+    (save-excursion
+      (unidata-command-on-buffer 'compile buffer)
+      ;; TODO: Check status of compile first
+      (unidata-command-on-buffer 'catalog buffer))))
 
 (defun host-is-this-host (host)
   nil)

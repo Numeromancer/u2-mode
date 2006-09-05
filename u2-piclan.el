@@ -2,9 +2,9 @@
 
 ;; Copyright (C) 2006  Free Software Foundation, Inc.
 
-;; Author: timothy <tschaeffer@acesoft.com>
+;; Author: Tim Schaeffer <numeromancer@users.sourceforge.net>
 ;; Keywords: processes, terminals, comm
-
+;; Time-stamp: <2006-09-01 14:39:41 timothy>
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 2, or (at your option)
@@ -38,3 +38,9 @@
 
 (provide 'u2-piclan)
 ;;; u2-piclan.el ends here
+
+;; Local variables:
+;;   mode: emacs-lisp
+;;   auto-save-interval: 1000
+;;   indent-tabs-mode: nil
+;; End:

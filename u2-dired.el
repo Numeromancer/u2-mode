@@ -1,8 +1,8 @@
-;; unidata.el -- Copyright (C) 2005 Timothy M. Schaeffer <tschaef@sbcglobal.net>
+;; u2-dired.el -- Copyright (C) 2005 Timothy M. Schaeffer <tschaef@sbcglobal.net>
 ;;
 ;; Major mode for working with UniBasic files in EMACS.
 ;;
-;; Author: Timothy M. Schaeffer <tschaef@sbcglobal.net>
+;; Author: Tim Schaeffer <numeromancer@users.sourceforge.net>
 ;; Version: 1.10   Time-stamp: <2005-12-03 14:18:36 timothy>
 ;; Maintainer: Timothy M. Schaeffer <tschaef@sbcglobal.net>
 ;; Keywords: languages database telnet
@@ -30,34 +30,11 @@
 ;;; COMMENTARY:
 ;;  -----------
 ;;
-;;   Provides an interface to the IBM Unidata database client, both for
-;;   local and remote connections.
-;;
-;;; INSTALLATION
-;;  ------------
-;;
-;;   You may need to have make-regexp available. More recent versions of
-;;   FSF Emacs have got `regex-opt' already. unidata-mode will try and
-;;   use this. If it isn't available it will go for make-regexp and if
-;;   that isn't available it'll ask for it.
-;;
-;;   Variables you should consider changing are:
-;;
-;;   To use this mode, put unidata-mode.el somewhere in your emacs load
-;;   path, compile it (using M-x byte-compile-file) and add the
-;;   following to your init file:
-;;
-;;   (autoload 'unidata-mode "unidata--tcl-mode" "Unidata mode." t)
-;;     (setq auto-mode-alist 
-;;       (append '(("\\.ub$" . unidata-mode)) auto-mode-alist))
-;;
-;;   _OR_
-;;     type in `M-x unidata--mode' once the file has been loaded.
-;;
-;;
-;;; SEE ALSO:
-;;  --------
-;;  proc-mode - a major mode for editing Pick style PROC buffers.
+;;  Functions for displaying a list of tables from a U2 VOC file. Meant
+;;  to be similar to dired, but with functions for manipulating U2
+;;  tables.
+;; 
+;;  Very immature.
 ;;
 ;;; KNOWN BUGS:
 ;;  -----------
