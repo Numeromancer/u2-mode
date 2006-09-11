@@ -159,6 +159,14 @@ command here, and it will be used instead of the default `RUN'"
 
 (defvar unibasic-source-table nil)
 
+(defun %u2-stringize (x)
+  (typecase x
+      (character (char-to-string x))
+      (t (format "%s" x))))
+
+(defun %u2-join (list &optional separator)
+  (let ((separator (%u2-stringize (or separator " "))))
+    (mapconcat (lambda (x) (format "%s" x)) list separator)))
 
 (defun* %u2-alist-get-string (string alist)
   (save-match-data
@@ -261,7 +269,7 @@ to Unidata."
                   (cond (a (setf command (cdr a)))
                         ((functionp command) (setf command (symbol-function command)))
                         (t (setf command (concat (upcase (symbol-name command)) " %s %s"))))))
-        (function (setf cmd-string (apply command (list table recid opt))))
+        (function (setf cmd-string (apply command (list* table recid opt))))
         (t (signal 'wrong-type-argument (list command)))))
     (setf cmd-string cmd-string)
     (unidata-send-command ud-proc cmd-string)))
@@ -278,7 +286,7 @@ to Unidata."
 
 
 
-(defun unidata-command-on-buffer (command buffer &optional rest)
+(defun unidata-command-on-buffer (command buffer &rest rest)
   "Run COMMAND as a U2 command on BUFFER.  The record path for buffer
 is found by calling `unidata-get-buffer-record-path' on it, and this
 is sent to `unidata-command-on-record' with COMMAND.  OPT is passed to
@@ -329,10 +337,8 @@ command."
 ;; if they are the same kind of item, like a record id.  Ugly. 
 
 (define-unidata-record-action compile (table recid  &rest rest)
-  (let ((_ " ")
-        (objtable (or (and (rest (car rest)))
-                      (unibasic-get-object-table table))))
-    (concat "BASIC" _  table _ "TO" _  objtable _  recid)))
+  (let ((objtable (unibasic-get-object-table table)))
+    (%u2-join (list* "BASIC"  table "TO"  objtable  recid rest))))
 
 
 (define-unidata-record-action catalog (table recid &optional objtable scope forcep)
@@ -340,17 +346,22 @@ command."
         (force (if t "FORCE" ""))
         (objtable (if objtable objtable (unibasic-get-object-table table)))
         (_ " "))
-    (concat "CATALOG" _  objtable _ recid _ scope _  force)))
+    (%u2-join (list unibasic-catalog-command objtable recid scope force))))
 
 
-(define-unidata-record-action run (table recid &optional args)
-  (let ((_ " "))
-    (concat "RUN" _ table _ recid _ (mapconcat 'identity args _))))
+(define-unidata-record-action run (table recid &rest args)
+  (let ((objtable (unibasic-get-object-table table)))
+    (%u2-join (list* "RUN" objtable recid  args))))
 
-(defun unibasic-compile ()
-  (interactive)
+(defun unibasic-compile (&rest extra-options)
+  (interactive (if current-prefix-arg
+                   (list (read-from-minibuffer
+                          "Options:"
+                          (%u2-join unibasic-basic-arg-list)))
+                 unibasic-basic-arg-list))
   (let ((buffer (current-buffer)))
-    (unidata-command-on-buffer 'compile buffer)))
+    (apply 'unidata-command-on-buffer
+           'compile buffer extra-options)))
 
 
 (defun unibasic-catalog ()
@@ -358,10 +369,12 @@ command."
   (let ((buffer (current-buffer)))
     (unidata-command-on-buffer 'catalog buffer)))
 
-(defun unibasic-run ()
-  (interactive "sArguments:")
+(defun unibasic-run (&rest extra-options)
+  (interactive (if current-prefix-arg
+                   (list (read-from-minibuffer "Arguments:"))
+                 ()))
   (let ((buffer (current-buffer)))
-    (unidata-command-on-buffer 'catalog buffer)))
+    (apply 'unidata-command-on-buffer 'run buffer extra-options)))
 
 (defun unibasic-compile-and-catalog ()
   "Compile and catalog the current UniBasic buffer."

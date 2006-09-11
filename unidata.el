@@ -382,17 +382,22 @@ cataloging.")
     ;; the interactive filter unidata-post-ud-filter, even if something
     ;; goes wrong, and the comint filter cannot set it back
     (run-at-time "5 sec" nil
-                 (function (lambda ()
-                             (unless (eq (process-filter unidata-process) 'unidata-filter)
-                               (set-process-filter unidata-process
-                                                   'unidata-filter))))
-                 nil)
+                 (lambda (buffer)
+                   (message "Resetting process filter for %s." buffer)
+                   (unidata-fix-redirect buffer))
+                 (current-buffer))
    ;;;;;;;;;;;;;;;;;;;;;
    ;;; Show the output
    ;;;;;;;;;;;;;;;;;;;;;
     (display-buffer buf)))
 
 
+(defun unidata-fix-redirect (&optional buffer)
+  (interactive)
+  (let ((buffer (or buffer (current-buffer))))
+    (with-current-buffer buffer
+      (comint-redirect-cleanup)
+      (set-process-filter unidata-process 'unidata-filter))))
 
 (defun unidata-help-hook (cmd-list)
   "Redirect help on a command to a seperate buffer."
@@ -704,7 +709,7 @@ temporary file is deleted when the buffer is killed unless
           ;; to unidata process, for saving later.
           (make-local-variable 'unidata-process)
           (make-local-variable 'unidata-record-path)
-          (make-local-variable 'u2-buffer buffer)
+          (make-local-variable 'u2-buffer)
           (setq unidata-process u2proc)
           (setq unidata-record-path (list table-name rec-id dict))
           (setq u2-buffer buffer)
@@ -918,6 +923,13 @@ record."
 
 ;;
 ;; $Log$
+;; Revision 1.13  2006/09/11 15:23:56  numeromancer
+;; Changed the way arguments are passed in unidata action functions.
+;; Changed the formatting of commands by creating function %u2-join to
+;;   join command words.
+;; Changed the redirect fixup after the help command so it works.
+;; Added menu item for PLZ command for piclan.
+;;
 ;; Revision 1.12  2006/09/05 17:39:17  numeromancer
 ;; Fixed a bug from left-over local q function, and with different arg specs
 ;; for extra args for u2-compile actions.  Changed email address to my

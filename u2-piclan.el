@@ -34,6 +34,8 @@
   (unidata-command-on-buffer 'plz (current-buffer)))
 
 
+(when unibasic-mode-map
+    (define-key unibasic-mode-map "\C-cz"    'u2-plz))
 
 
 (provide 'u2-piclan)
