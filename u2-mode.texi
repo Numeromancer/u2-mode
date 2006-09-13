@@ -12,8 +12,6 @@
 @c configure.ac, so you should edit that file and run
 @c "autoconf && ./configure" to change the version number.
 
-@c Additionally, flags are set with respect to the Emacs flavor; and
-@c depending whether U2-Mode is packaged into (X)Emacs, or standalone.
 
 @include u2-modever.texi
 
@@ -25,8 +23,7 @@
 @end macro
 
 @copying
-Copyright @copyright{} 1999, 2000, 2001, 2002, 2003, 2004,
-   2005 Free Software Foundation, Inc.
+Copyright @copyright{}   2005 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -51,8 +48,7 @@ license to the document, as described in section 6 of the license.
 @c Entries for @command{install-info} to use
 @dircategory @value{emacsname}
 @direntry
-* U2-MODE: (u2-mode).                Transparent Remote Access, Multiple Protocol
-                                 @value{emacsname} remote file access via rsh and rcp.
+* U2-MODE: (u2-mode).               @value{emacsname} Interface to IBM Unidata and Universe.
 @end direntry
 
 @tex
@@ -61,7 +57,6 @@ license to the document, as described in section 6 of the license.
 @title @value{u2-mode} version @value{u2-modever} User Manual
 
 @author Tim Schaeffer
-@author by Kai Gro@ss{}johann
 
 @page
 @insertcopying
@@ -76,19 +71,13 @@ license to the document, as described in section 6 of the license.
 @top @value{u2-mode} version @value{u2-modever} User Manual
 
 This file documents @value{u2-mode} version @value{u2-modever}, a
-Unidata interface package for @value{emacsname}.
+Unidata/Universe interface package for @value{emacsname}.
 
 @value{u2-mode} provides a suite of @value{emacsname} commands, modes
 and functions for working in a U2 environment.  For now, only Unidata
 is supported, because that is the environment I use, and I have no
 motivation to ensure that it works with Universe, or other Pick style
 database environments.
-
-
-The difference is that @value{ftppackagename} uses FTP to transfer
-files between the local and the remote host, whereas @value{u2-mode} uses a
-combination of @command{rsh} and @command{rcp} or other work-alike
-programs, such as @command{ssh}/@command{scp}.
 
 You can find the latest version of this document on the web at
 @uref{http://www.sourceforge.net} in the module @value{u2-mode}.
@@ -111,6 +100,7 @@ The latest release of @value{u2-mode} is available for
 @ref{Obtaining U2-Mode} for more details, including the CVS server
 details.
 
+@ignore
 There is a mailing list for @value{u2-mode}, available at
 @email{u2-mode-devel@@gnu.org}, and archived at
 @uref{http://lists.gnu.org/archive/html/u2-mode-devel/, the
@@ -124,6 +114,7 @@ The Mail Archive}.
 @c in HTML output, there's no new paragraph.
 @*@*
 @end ifhtml
+@end ignore
 
 @insertcopying
 
@@ -134,23 +125,17 @@ The Mail Archive}.
 
 For the end user:
 
-* Obtaining U2-Mode::             How to obtain @value{u2-mode}.
+* Obtaining U2-Mode::           How to obtain @value{u2-mode}.
 * History::                     History of @value{u2-mode}.
-@ifset installchapter
-* Installation::                Installing @value{u2-mode} with your @value{emacsname}.
-@end ifset
 * Configuration::               Configuring @value{u2-mode} for use.
 * Usage::                       An overview of the operation of @value{u2-mode}.
 * Bug Reports::                 Reporting Bugs and Problems.
 * Frequently Asked Questions::  Questions and answers from the mailing list.
+* Issues::                      
 * Concept Index::               An item for each concept.
 
 For the developer:
 
-* Version Control::             The inner workings of remote version control.
-* Files directories and localnames::  How file names, directories and localnames are mangled and managed.
-* Traces and Profiles::         How to Customize Traces.
-* Issues::                      Debatable Issues and What Was Decided.
 
 @detailmenu
  --- The Detailed Node Listing ---
@@ -158,54 +143,6 @@ For the developer:
 @ifset installchapter
 Installing @value{u2-mode} with your @value{emacsname}
 
-* Installation parameters::     Parameters in order to control installation.
-* Load paths::                  How to plug-in @value{u2-mode} into your environment.
-* Japanese manual::             Japanese manual.
-
-@end ifset
-
-Configuring @value{u2-mode} for use
-
-* Connection types::            Types of connections made to remote machines.
-* Inline methods::              Inline methods.
-* External transfer methods::   External transfer methods.
-* Default Method::              Selecting a default method.
-* Default User::                Selecting a default user.
-* Default Host::                Selecting a default host.
-* Multi-hops::                  Connecting to a remote host using multiple hops.
-* Customizing Methods::         Using Non-Standard Methods.
-* Customizing Completion::      Selecting config files for user/host name completion.
-* Password caching::            Reusing passwords for several connections.
-* Remote Programs::             How @value{u2-mode} finds and uses programs on the remote machine.
-* Remote shell setup::          Remote shell setup hints.
-* Windows setup hints::         Issues with Cygwin ssh.
-* Auto-save and Backup::        Auto-save and Backup.
-
-Using @value{u2-mode}
-
-* Filename Syntax::             @value{u2-mode} filename conventions.
-* Alternative Syntax::          URL-like filename syntax.
-* Filename completion::         Filename completion.
-* Compilation::                 Compile remote files.
-
-The inner workings of remote version control
-
-* Version Controlled Files::    Determining if a file is under version control.
-* Remote Commands::             Executing the version control commands on the remote machine.
-* Changed workfiles::           Detecting if the working file has changed.
-* Checking out files::          Bringing the workfile out of the repository.
-* Miscellaneous Version Control::  Things related to Version Control that don't fit elsewhere.
-
-Things related to Version Control that don't fit elsewhere
-
-* Remote File Ownership::       How VC determines who owns a workfile.
-* Back-end Versions::           How VC determines what release your RCS is.
-
-How file names, directories and localnames are mangled and managed
-
-* Localname deconstruction::    Breaking a localname into its components.
-
-@end detailmenu
 @end menu
 
 @node Overview
@@ -213,15 +150,8 @@ How file names, directories and localnames are mangled and managed
 @cindex overview
 
 @value{u2-mode} provides a collection of emacs utilities for interacting
-with and developing applications for IBM's UniData Multi-value database
-system.  These include
-
-@itemize{@bullet}
-
-@item A command line TCL/ECL interface for interacting with UniData.
-This used the @
-@end itemize
-
+with and developing applications for IBM's UniData and Universe
+Multi-value database system. 
 After the installation of @value{u2-mode} into your @value{emacsname},
 you will be able to 
 
@@ -247,6 +177,8 @@ Keep a record of your entire session history in an Emacs buffer.  You
 can review, search, edit, and run most other commands available in
 Emacs.
 
+@item Compile, catalog and run unibasic subroutines, functions and
+programs from 
 @end itemize
 
 
@@ -273,13 +205,13 @@ When you run @samp{unidata}, it asks for the name of the account to
 which to connect.  The account must be a directory name, but it can
 accept a remote directory specification, just as tramp accepts. If the
 directory is local, it opens a shell, runs the unidata command as in the
-@var{unidata-udt-command}. (Note: there is a variable call
+@var{unidata-udt-command}. (Note: there is a variable
 @var{unidata-application-path}, but it is not used.  It should be, and
 will be in the future, so @var{unidata-udt-command} will not need the
 entire path.)  If the account path is remote, it extracts the host name
-from the path, connects to the host through telnet, and runs the
+from the path, connects to the host, and runs the
 @var{unidata-udt-command} on the remote host, and opens a buffer in a
-mode derived from @{telnet-mode}.
+mode derived from @{comint-mode}.
 @end itemize
 
 @c For the end user
@@ -289,84 +221,16 @@ mode derived from @{telnet-mode}.
 
 @value{u2-mode} is freely available on the Internet and the latest
 release may be downloaded from
-@uref{http://ftp.gnu.org/gnu/u2-mode/}. This release includes the full
-documentation and code for @value{u2-mode}, suitable for installation.
-But GNU Emacs (22 or later) includes @value{u2-mode} already, and there
-is a @value{u2-mode} package for XEmacs, as well.  So maybe it is easier
-to just use those.  But if you want the bleeding edge, read
-on@dots{...}
-
-For the especially brave, @value{u2-mode} is available from CVS.  The CVS
-version is the latest version of the code and may contain incomplete
-features or new issues. Use these versions at your own risk.
-
-Instructions for obtaining the latest development version of @value{u2-mode}
-from CVS can be found by going to the Savannah project page at the
-following URL and then clicking on the CVS link in the navigation bar
-at the top.
-
-@noindent
-@uref{http://savannah.gnu.org/projects/u2-mode/}
-
-@noindent
-Or follow the example session below:
-
-@example
-] @strong{cd ~/@value{emacsdir}}
-] @strong{export CVS_RSH="ssh"}
-] @strong{cvs -z3 -d:ext:anoncvs@@savannah.gnu.org:/cvsroot/u2-mode co u2-mode}
-@end example
-
-@noindent
-You should now have a directory @file{~/@value{emacsdir}/u2-mode}
-containing the latest version of @value{u2-mode}. You can fetch the latest
-updates from the repository by issuing the command:
-
-@example
-] @strong{cd ~/@value{emacsdir}/u2-mode}
-] @strong{export CVS_RSH="ssh"}
-] @strong{cvs update -d}
-@end example
-
-@noindent
-Once you've got updated files from the CVS repository, you need to run
-@command{autoconf} in order to get an up-to-date @file{configure}
-script:
-
-@example
-] @strong{cd ~/@value{emacsdir}/u2-mode}
-] @strong{autoconf}
-@end example
-
-People who have no direct CVS access (maybe because sitting behind a
-blocking firewall), can try the
-@uref{http://savannah.gnu.org/cvs-backup/u2-mode-sources.tar.gz, Nightly
-CVS Tree Tarball} instead of.
-
+@uref{http://ftp.gnu.org/gnu/u2-mode/}.
 
 @node History
 @chapter History of @value{u2-mode}
 @cindex history
 @cindex development history
 
-Development was started end of November 1998.  The package was called
-@file{rssh.el}, back then.  It only provided one method to access a
-file, using @command{ssh} to log in to a remote host and using
-@command{scp} to transfer the file contents.  After a while, the name
-was changed to @file{rcp.el}, and now it's @value{u2-mode}.  Along the way,
-many more methods for getting a remote shell and for transferring the
-file contents were added.  Support for VC was added.
+@c History?
 
-The most recent addition of major features were the multi-hop methods
-added in April 2000 and the unification of @value{u2-mode} and Ange-FTP
-filenames in July 2002.  In July 2004, multi-hop methods have been
-replaced by proxy hosts.
-
-@c Installation chapter is necessary only in case of standalone
-@c installation.  Text taken from u2-modeinst.texi.
-@ifset installchapter
 @include u2-modeinst.texi
-@end ifset
 
 @node Configuration
 @chapter Configuring @value{u2-mode} for use
@@ -396,8 +260,6 @@ Method}.
 
 @menu
 * Connection types::            Types of connections made to remote machines.
-* Inline methods::              Inline methods.
-* External transfer methods::   External transfer methods.
 * Default Method::              Selecting a default method.
                                   Here we also try to help those who
                                   don't have the foggiest which method
@@ -419,15 +281,13 @@ Method}.
 @section Types of connections made to remote machines.
 @cindex connection types, overview
 
-There are two basic types of transfer methods, each with its own
-advantages and limitations.  Both types of connection make use of a
-remote shell access program such as @command{rsh}, @command{ssh} or
-@command{telnet} to connect to the remote machine.
+U2-mode now only knows how to connect to the host using telnet.  It can
+connect to a telnet server, and start unidata from the shell command
+line, or connect into a session which goes directly into a U2 session
+(as, for example, if the server is a Windows box running the U2 telnet
+server.) 
 
-This connection is used to perform many of the operations that @value{u2-mode}
-requires to make the remote file system transparently accessible from
-the local machine. It is only when visiting files that the methods
-differ.
+Eventually, I hope to recognize all of the methods honored by Tramp:
 
 @cindex inline methods
 @cindex external transfer methods
@@ -436,6 +296,8 @@ differ.
 @cindex methods, inline
 @cindex methods, external transfer
 @cindex methods, out-of-band
+
+@ignore
 Loading or saving a remote file requires that the content of the file
 be transfered between the two machines. The content of the file can be
 transfered over the same connection used to log in to the remote
@@ -459,24 +321,7 @@ External transfer methods should be configured such a way that they
 don't require a password (with @command{ssh-agent}, or such alike).
 If it isn't possible, you should consider @ref{Password caching},
 otherwise you will be prompted for a password every copy action.
-
-
-@node Inline methods
-@section Inline methods
-@cindex inline methods
-@cindex methods, inline
-
-The inline methods in @value{u2-mode} are quite powerful and can work in
-situations where you cannot use an external transfer program to connect.
-Inline methods are the only methods that work when connecting to the
-remote machine via telnet.  (There are also strange inline methods which
-allow you to transfer files between @emph{user identities} rather than
-hosts, see below.)
-
-These methods depend on the existence of a suitable encoding and
-decoding command on remote machine.  Locally, @value{u2-mode} may be able to
-use features of @value{emacsname} to decode and encode the files or
-it may require access to external commands to perform that task.
+@end ignore
 
 @cindex uuencode
 @cindex mimencode
@@ -500,11 +345,7 @@ apply it for encoding and decoding.
 Connect to the remote host with @command{rsh}.  Due to the unsecure
 connection it is recommended for very local host topology only.
 
-On operating systems which provide the command @command{remsh} instead
-of @command{rsh}, you can use the method @option{remsh}.  This is true
-for HP-UX or Cray UNICOS, for example.
-
-
+@ignore
 @item @option{ssh}
 @cindex method ssh
 @cindex ssh method
@@ -530,15 +371,18 @@ feature: you can specify a host name which looks like @file{host#42}
 means to connect to the given host but to also pass @code{-p 42} as
 arguments to the @command{ssh} command.
 
+@end ignore
 
+@ignore
 @item @option{telnet}
 @cindex method telnet
 @cindex telnet method
 
 Connect to the remote host with @command{telnet}.  This is as unsecure
 as the @option{rsh} method.
+@end ignore
 
-
+@ignore
 @item @option{su}
 @cindex method su
 @cindex su method
@@ -547,7 +391,7 @@ This method does not connect to a remote host at all, rather it uses
 the @command{su} program to allow you to edit files as another user.
 With other words, a specified host name in the file name is silently
 ignored.
-
+@end ignore
 
 @item @option{sudo}
 @cindex method sudo
@@ -557,10 +401,7 @@ This is similar to the @option{su} method, but it uses @command{sudo}
 rather than @command{su} to become a different user.
 
 Note that @command{sudo} must be configured to allow you to start a
-shell as the user.  It would be nice if it was sufficient if
-@command{ls} and @command{mimencode} were allowed, but that is not
-easy to implement, so I haven't got around to it, yet.
-
+shell as the user. 
 
 @item @option{sshx}
 @cindex method sshx
@@ -591,7 +432,7 @@ doubled @samp{-t} option.
 
 This supports the @samp{-p} kludge.
 
-
+@ignore
 @item @option{krlogin}
 @cindex method krlogin
 @cindex krlogin method
@@ -599,8 +440,9 @@ This supports the @samp{-p} kludge.
 
 This method is also similar to @option{ssh}.  It only uses the
 @command{krlogin -x} command to log in to the remote host.
+@end ignore
 
-
+@ignore
 @item @option{plink}
 @cindex method plink
 @cindex plink method
@@ -620,6 +462,7 @@ line to accept the SSH key?  Maybe this can be made automatic?
 
 CCC: Say something about the first shell command failing.  This might
 be due to a wrong setting of @code{u2-mode-rsh-end-of-line}.
+@end ignore 
 
 @end table
 
@@ -642,6 +485,11 @@ If you want to use an external transfer method you should be able to
 execute the transfer utility to copy files to and from the remote
 machine without any interaction.
 
+The method of transfer is not important to U2-mode, since it does not
+itself transfer files, but I plan to recognize all of tramps connection
+types and use the appropriate command to create the shell connection to
+the server.
+
 @cindex ssh-agent
 This means that you will need to use @command{ssh-agent} if you use the
 @command{scp} program for transfers, or maybe your version of
@@ -653,21 +501,13 @@ apply to that connection.
 If you cannot get an external method to run without asking for a
 password you should consider @ref{Password caching}.
 
-
+@ignore
 @table @asis
 @item @option{rcp}  ---  @command{rsh} and @command{rcp}
 @cindex method rcp
 @cindex rcp method
 @cindex rcp (with rcp method)
 @cindex rsh (with rcp method)
-
-This method uses the @command{rsh} and @command{rcp} commands to connect
-to the remote machine and transfer files.  This is probably the fastest
-connection method available.
-
-The alternative method @option{remcp} uses the @command{remsh} and
-@command{rcp} commands.  It should be applied on machines where
-@command{remsh} is used instead of @command{rsh}.
 
 
 @item @option{scp}  ---  @command{ssh} and @command{scp}
@@ -676,49 +516,11 @@ The alternative method @option{remcp} uses the @command{remsh} and
 @cindex scp (with scp method)
 @cindex ssh (with scp method)
 
-Using @command{ssh} to connect to the remote host and @command{scp} to
-transfer files between the machines is the best method for securely
-connecting to a remote machine and accessing files.
-
-The performance of this option is also quite good. It may be slower than
-the inline methods when you often open and close small files however.
-The cost of the cryptographic handshake at the start of an @command{scp}
-session can begin to absorb the advantage that the lack of encoding and
-decoding presents.
-
-There are also two variants, @option{scp1} and @option{scp2}, that
-call @samp{ssh -1} and @samp{ssh -2}, respectively.  This way, you can
-explicitly select whether you want to use the SSH protocol version 1
-or 2 to connect to the remote host.  (You can also specify in
-@file{~/.ssh/config}, the SSH configuration file, which protocol
-should be used, and use the regular @option{scp} method.)
-
-Two other variants, @option{scp1_old} and @option{scp2_old}, use the
-@command{ssh1} and @command{ssh2} commands explicitly.  If you don't
-know what these are, you do not need these options.
-
-All the @command{ssh} based methods support the kludgy @samp{-p}
-feature where you can specify a port number to connect to in the host
-name.  For example, the host name @file{host#42} tells @value{u2-mode} to
-specify @samp{-p 42} in the argument list for @command{ssh}, and to
-specify @samp{-P 42} in the argument list for @command{scp}.
-
-
 @item @option{sftp}  ---  @command{ssh} and @command{sftp}
 @cindex method sftp
 @cindex sftp method
 @cindex sftp (with sftp method)
 @cindex ssh (with sftp method)
-
-That is mostly the same method as @option{scp}, but using
-@command{sftp} as transfer command.  So the same remarks are valid.
-
-This command does not work like @value{ftppackagename}, where
-@command{ftp} is called interactively, and all commands are send from
-within this session.  Instead of, @command{ssh} is used for login.
-
-This method supports the @samp{-p} hack.
-
 
 @item @option{rsync}  ---  @command{ssh} and @command{rsync}
 @cindex method rsync
@@ -726,43 +528,11 @@ This method supports the @samp{-p} hack.
 @cindex rsync (with rsync method)
 @cindex ssh (with rsync method)
 
-Using the @command{ssh} command to connect securely to the remote
-machine and the @command{rsync} command to transfer files is almost
-identical to the @option{scp} method.
-
-While @command{rsync} performs much better than @command{scp} when
-transferring files that exist on both hosts, this advantage is lost if
-the file exists only on one side of the connection.
-
-The @command{rsync} based method may be considerably faster than the
-@command{rcp} based methods when writing to the remote system. Reading
-files to the local machine is no faster than with a direct copy.
-
-This method supports the @samp{-p} hack.
-
-
 @item @option{scpx} --- @command{ssh} and @command{scp}
 @cindex method scpx
 @cindex scpx method
 @cindex scp (with scpx method)
 @cindex ssh (with scpx method)
-
-As you would expect, this is similar to @option{scp}, only a little
-different.  Whereas @option{scp} opens a normal interactive shell on
-the remote host, this option uses @samp{ssh -t -t @var{host} -l
-@var{user} /bin/sh} to open a connection.  This is useful for users
-where the normal login shell is set up to ask them a number of
-questions when logging in.  This procedure avoids these questions, and
-just gives @value{u2-mode} a more-or-less `standard' login shell to work
-with.
-
-This is also useful for Windows users where @command{ssh}, when
-invoked from an @value{emacsname} buffer, tells them that it is not
-allocating a pseudo tty.  When this happens, the login shell is wont
-to not print any shell prompt, which confuses @value{u2-mode} mightily.
-
-This method supports the @samp{-p} hack.
-
 
 @item @option{pscp} --- @command{plink} and @command{pscp}
 @cindex method pscp
@@ -770,13 +540,6 @@ This method supports the @samp{-p} hack.
 @cindex pscp (with pscp method)
 @cindex plink (with pscp method)
 @cindex PuTTY (with pscp method)
-
-This method is similar to @option{scp}, but it uses the
-@command{plink} command to connect to the remote host, and it uses
-@command{pscp} for transferring the files.  These programs are part
-of PuTTY, an SSH implementation for Windows.
-
-This method supports the @samp{-P} hack.
 
 
 @item @option{psftp} --- @command{plink} and @command{psftp}
@@ -786,13 +549,6 @@ This method supports the @samp{-P} hack.
 @cindex plink (with psftp method)
 @cindex PuTTY (with psftp method)
 
-As you would expect, this method is similar to @option{sftp}, but it
-uses the @command{plink} command to connect to the remote host, and it
-uses @command{psftp} for transferring the files.  These programs are
-part of PuTTY, an SSH implementation for Windows.
-
-This method supports the @samp{-P} hack.
-
 
 @item @option{fcp} --- @command{fsh} and @command{fcp}
 @cindex method fcp
@@ -801,8 +557,7 @@ This method supports the @samp{-P} hack.
 @cindex fcp (with fcp method)
 
 This method is similar to @option{scp}, but it uses the @command{fsh}
-command to connect to the remote host, and it uses @command{fcp} for
-transferring the files.  @command{fsh/fcp} are a front-end for
+command to connect to the remote host.  @command{fsh/fcp} are a front-end for
 @command{ssh} which allow for reusing the same @command{ssh} session
 for submitting several commands.  This avoids the startup overhead of
 @command{scp} (which has to establish a secure connection whenever it
@@ -816,75 +571,19 @@ This method uses the command @samp{fsh @var{host} -l @var{user}
 @cindex method fsh
 @cindex fsh method
 
-There is no inline method using @command{fsh} as the multiplexing
-provided by the program is not very useful in our context.  @value{u2-mode}
-opens just one connection to the remote host and then keeps it open,
-anyway.
-
-
-@item @option{ftp}
-@cindex method ftp
-@cindex ftp method
-
-This is not a native @value{u2-mode} method. Instead of, it forwards all
-requests to @value{ftppackagename}.
-@ifset xemacs
-This works only for unified filenames, see @ref{Issues}.
-@end ifset
-
-
-@item @option{smb} --- @command{smbclient}
-@cindex method smb
-@cindex smb method
-
-This is another not natural @value{u2-mode} method.  It uses the
-@command{smbclient} command on different Unices in order to connect to
-an SMB server.  An SMB server might be a Samba (or CIFS) server on
-another UNIX host or, more interesting, a host running MS Windows.  So
-far, it is tested towards MS Windows NT, MS Windows 2000, and MS
-Windows XP.
-
-The first directory in the localname must be a share name on the remote
-host.  Remember, that the @code{$} character in which default shares
-usually end, must be written @code{$$} due to environment variable
-substitution in file names.  If no share name is given (i.e. remote
-directory @code{/}), all available shares are listed.
-
-Since authorization is done on share level, you will be prompted
-always for a password if you access another share on the same host.
-This can be suppressed by @ref{Password caching}.
-
-MS Windows uses for authorization both a user name and a domain name.
-Because of this, the @value{u2-mode} syntax has been extended: you can
-specify a user name which looks like @code{user%domain} (the real user
-name, then a percent sign, then the domain name).  So, to connect to
-the machine @code{melancholia} as user @code{daniel} of the domain
-@code{BIZARRE}, and edit @file{.emacs} in the home directory (share
-@code{daniel$}) I would specify the filename
-@file{@value{prefix}smb@value{postfixhop}daniel%BIZARRE@@melancholia@value{postfix}/daniel$$/.emacs}.
-
-The domain name as well as the user name are optional.  If no user
-name is specified at all, the anonymous user (without password
-prompting) is assumed.  This is different from all other @value{u2-mode}
-methods, where in such a case the local user name is taken.
-
-The @option{smb} method supports the @samp{-p} hack.
-
-@strong{Please note:} If @value{emacsname} runs locally under MS
-Windows, this method isn't available.  Instead of, you can use UNC
-file names like @file{//melancholia/daniel$$/.emacs}.  The only
-disadvantage is that there's no possibility to specify another user
-name.
 
 @end table
+
+@end ignore
 
 
 @node Default Method
 @section Selecting a default method
 @cindex default method
 
+@ignore
 @vindex u2-mode-default-method
-When you select an appropriate transfer method for your typical usage
+When you select an appropriate connection method for your typical usage
 you should set the variable @code{u2-mode-default-method} to reflect that
 choice.  This variable controls which method will be used when a method
 is not specified in the @value{u2-mode} file name.  For example:
@@ -915,11 +614,12 @@ See the documentation for the variable
 
 External transfer methods are normally preferable to inline transfer
 methods, giving better performance.
+@end ignore
 
 @xref{Inline methods}.
 @xref{External transfer methods}.
 
-Another consideration with the selection of transfer methods is the
+Another consideration with the selection of connection methods is the
 environment you will use them in and, especially when used over the
 Internet, the security implications of your preferred method.
 
@@ -935,46 +635,7 @@ making it a non-trivial exercise for someone to obtain your password
 or read the content of the files you are editing.
 
 
-@subsection Which method is the right one for me?
-@cindex choosing the right method
-
-Given all of the above, you are probably thinking that this is all fine
-and good, but it's not helping you to choose a method!  Right you are.
-As a developer, we don't want to boss our users around but give them
-maximum freedom instead.  However, the reality is that some users would
-like to have some guidance, so here I'll try to give you this guidance
-without bossing you around.  You tell me whether it works @dots{}
-
-My suggestion is to use an inline method.  For large files, out-of-band
-methods might be more efficient, but I guess that most people will want
-to edit mostly small files.
-
-I guess that these days, most people can access a remote machine by
-using @command{ssh}.  So I suggest that you use the @option{ssh}
-method.  So, type @kbd{C-x C-f
-@value{prefix}ssh@value{postfixhop}root@@otherhost@value{postfix}/etc/motd
-@key{RET}} to edit the @file{/etc/motd} file on the other host.
-
-If you can't use @option{ssh} to log in to the remote host, then
-select a method that uses a program that works.  For instance, Windows
-users might like the @option{plink} method which uses the PuTTY
-implementation of @command{ssh}.  Or you use Kerberos and thus like
-@option{krlogin}.
-
-For the special case of editing files on the local host as another
-user, see the @option{su} or @option{sudo} methods.  They offer
-shortened syntax for the @samp{root} account, like
-@file{@value{prefix}su@value{postfixhop}@value{postfix}/etc/motd}.
-
-People who edit large files may want to consider @option{scp} instead
-of @option{ssh}, or @option{pscp} instead of @option{plink}.  These
-out-of-band methods are faster than inline methods for large files.
-Note, however, that out-of-band methods suffer from some limitations.
-Please try first whether you really get a noticeable speed advantage
-from using an out-of-band method!  Maybe even for large files, inline
-methods are fast enough.
-
-
+@ignore
 @node Default User
 @section Selecting a default user
 @cindex default user
@@ -1027,8 +688,9 @@ will be done by setting it to @code{nil} (or @samp{lily}, likewise):
 (add-to-list 'u2-mode-default-user-alist
              '("ssh" "\\`here\\.somewhere\\.else\\'" nil))
 @end lisp
+@end ignore
 
-
+@ignore
 @node Default Host
 @section Selecting a default host
 @cindex default host
@@ -1055,200 +717,16 @@ Note, however, that the most simplification
 @samp{@value{prefix}@value{postfixhop}@value{postfix}} won't work,
 because @samp{/:} is the prefix for quoted file names.
 @end ifset
-
-
-@node Multi-hops
-@section Connecting to a remote host using multiple hops
-@cindex multi-hop
-@cindex proxy hosts
-
-Sometimes, the methods described before are not sufficient.  Sometimes,
-it is not possible to connect to a remote host using a simple command.
-For example, if you are in a secured network, you might have to log in
-to a `bastion host' first before you can connect to the outside world.
-Of course, the target host may also require a bastion host.
-
-@vindex u2-mode-default-proxies-alist
-In order to specify such multiple hops, it is possible to define a proxy
-host to pass through, via the variable
-@code{u2-mode-default-proxies-alist}.  This variable keeps a list of
-triples (@var{host} @var{user} @var{proxy}).
-
- The first matching item specifies the proxy host to be passed for a
-file name located on a remote target matching @var{user}@@@var{host}.
-@var{host} and @var{user} are regular expressions or @code{nil}, which
-is interpreted as a regular expression which always matches.
-
-@var{proxy} must be a U2-Mode filename which localname part is ignored.
-Method and user name on @var{proxy} are optional, which is interpreted
-with the default values.  The method must be an inline method
-(@pxref{Inline methods}).  If @var{proxy} is @code{nil}, no additional
-hop is required reaching @var{user}@@@var{host}.
-
-If you, for example, must pass the host @samp{bastion.your.domain} as
-user @samp{bird} for any remote host which is not located in your local
-domain, you can set
-
-@lisp
-(add-to-list 'u2-mode-default-proxies-alist
-             '("\\." nil "@value{prefix}ssh@value{postfixhop}bird@@bastion.your.domain@value{postfix}"))
-(add-to-list 'u2-mode-default-proxies-alist
-             '("\\.your\\.domain\\'" nil nil))
-@end lisp
-
-Please note the order of the code.  @code{add-to-list} adds elements at the
-beginning of a list.  Therefore, most relevant rules must be added last.
-
-Proxy hosts can be cascaded.  If there is another host called
-@samp{jump.your.domain}, which is the only one in your local domain who
-is allowed connecting @samp{bastion.your.domain}, you can add another
-rule:
-
-@lisp
-(add-to-list 'u2-mode-default-proxies-alist
-             '("\\`bastion\\.your\\.domain\\'"
-               "\\`bird\\'"
-               "@value{prefix}ssh@value{postfixhop}jump.your.domain@value{postfix}"))
-@end lisp
-
-
-@node Customizing Methods
-@section Using Non-Standard Methods
-@cindex customizing methods
-@cindex using non-standard methods
-@cindex create your own methods
-
-There is a variable @code{u2-mode-methods} which you can change if the
-predefined methods don't seem right.
-
-For the time being, I'll refer you to the Lisp documentation of that
-variable, accessible with @kbd{C-h v u2-mode-methods @key{RET}}.
-
-
-@node Customizing Completion
-@section Selecting config files for user/host name completion
-@cindex customizing completion
-@cindex selecting config files
-@vindex u2-mode-completion-function-alist
-
-The variable @code{u2-mode-completion-function-alist} is intended to
-customize which files are taken into account for user and host name
-completion (@pxref{Filename completion}).  For every method, it keeps
-a set of configuration files, accompanied by a Lisp function able to
-parse that file.  Entries in @code{u2-mode-completion-function-alist}
-have the form (@var{method} @var{pair1} @var{pair2} ...).
-
-Each @var{pair} is composed of (@var{function} @var{file}).
-@var{function} is responsible to extract user names and host names
-from @var{file} for completion.  There are two functions which access
-this variable:
-
-@defun u2-mode-get-completion-function method
-This function returns the list of completion functions for @var{method}.
-
-Example:
-@example
-(u2-mode-get-completion-function "rsh")
-
-     @result{} ((u2-mode-parse-rhosts "/etc/hosts.equiv")
-         (u2-mode-parse-rhosts "~/.rhosts"))
-@end example
-@end defun
-
-@defun u2-mode-set-completion-function method function-list
-This function sets @var{function-list} as list of completion functions
-for @var{method}.
-
-Example:
-@example
-(u2-mode-set-completion-function "ssh"
- '((u2-mode-parse-sconfig "/etc/ssh_config")
-   (u2-mode-parse-sconfig "~/.ssh/config")))
-
-     @result{} ((u2-mode-parse-sconfig "/etc/ssh_config")
-         (u2-mode-parse-sconfig "~/.ssh/config"))
-@end example
-@end defun
-
-The following predefined functions parsing configuration files exist:
-
-@table @asis
-@item @code{u2-mode-parse-rhosts}
-@findex u2-mode-parse-rhosts
-
-This function parses files which are syntactical equivalent to
-@file{~/.rhosts}.  It returns both host names and user names, if
-specified.
-
-@item @code{u2-mode-parse-shosts}
-@findex u2-mode-parse-shosts
-
-This function parses files which are syntactical equivalent to
-@file{~/.ssh/known_hosts}.  Since there are no user names specified
-in such files, it can return host names only.
-
-@item @code{u2-mode-parse-sconfig}
-@findex u2-mode-parse-shosts
-
-This function returns the host nicknames defined by @code{Host} entries
-in @file{~/.ssh/config} style files.
-
-@item @code{u2-mode-parse-shostkeys}
-@findex u2-mode-parse-shostkeys
-
-SSH2 parsing of directories @file{/etc/ssh2/hostkeys/*} and
-@file{~/ssh2/hostkeys/*}.  Hosts are coded in file names
-@file{hostkey_@var{portnumber}_@var{host-name}.pub}.  User names
-are always @code{nil}.
-
-@item @code{u2-mode-parse-sknownhosts}
-@findex u2-mode-parse-shostkeys
-
-Another SSH2 style parsing of directories like
-@file{/etc/ssh2/knownhosts/*} and @file{~/ssh2/knownhosts/*}.  This
-case, hosts names are coded in file names
-@file{@var{host-name}.@var{algorithm}.pub}.  User names are always @code{nil}.
-
-@item @code{u2-mode-parse-hosts}
-@findex u2-mode-parse-hosts
-
-A function dedicated to @file{/etc/hosts} style files.  It returns
-host names only.
-
-@item @code{u2-mode-parse-passwd}
-@findex u2-mode-parse-passwd
-
-A function which parses @file{/etc/passwd} like files.  Obviously, it
-can return user names only.
-
-@item @code{u2-mode-parse-netrc}
-@findex u2-mode-parse-netrc
-
-Finally, a function which parses @file{~/.netrc} like files.
-@end table
-
-If you want to keep your own data in a file, with your own structure,
-you might provide such a function as well.  This function must meet
-the following conventions:
-
-@defun my-u2-mode-parse file
-@var{file} must be either a file name on your host, or @code{nil}. The
-function must return a list of (@var{user} @var{host}), which are
-taken as candidates for user and host name completion.
-
-Example:
-@example
-(my-u2-mode-parse "~/.my-u2-mode-hosts")
-
-     @result{} ((nil "toto") ("daniel" "melancholia"))
-@end example
-@end defun
+@end ignore
 
 
 @node Password caching
 @section Reusing passwords for several connections.
 @cindex passwords
 
+U2-mode uses a password caching scheme similary to that used by tramp. 
+
+@ignore
 Sometimes it is necessary to connect to the same remote host several
 times.  Reentering passwords again and again would be annoying, when
 the choosen method does not support access without password prompt
@@ -1286,49 +764,7 @@ If you don't use No Gnus, you can take password.el from the @value{u2-mode}
 @end ifset
 It will be activated mandatory once No Gnus has found its way into
 @value{emacsname}.
-
-
-@node Remote Programs
-@section How @value{u2-mode} finds and uses programs on the remote machine.
-
-@value{u2-mode} depends on a number of programs on the remote host in order to
-function, including @command{ls}, @command{test}, @command{find} and
-@command{cat}.
-
-In addition to these required tools, there are various tools that may be
-required based on the connection method. See @ref{Inline methods} and
-@ref{External transfer methods} for details on these.
-
-Certain other tools, such as @command{perl} (or @command{perl5}) and
-@command{grep} will be used if they can be found. When they are
-available, they are used to improve the performance and accuracy of
-remote file access.
-
-@vindex u2-mode-remote-path
-When @value{u2-mode} connects to the remote machine, it searches for the
-programs that it can use. The variable @var{u2-mode-remote-path} controls
-the directories searched on the remote machine.
-
-By default, this is set to a reasonable set of defaults for most
-machines. It is possible, however, that your local (or remote ;) system
-administrator has put the tools you want in some obscure local
-directory.
-
-In this case, you can still use them with @value{u2-mode}. You simply need to
-add code to your @file{.emacs} to add the directory to the remote path.
-This will then be searched by @value{u2-mode} when you connect and the software
-found.
-
-To add a directory to the remote search path, you could use code such
-as:
-
-@lisp
-@i{;; We load @value{u2-mode} to define the variable.}
-(require 'u2-mode)
-@i{;; We have @command{perl} in "/usr/local/perl/bin"}
-(add-to-list 'u2-mode-remote-path "/usr/local/perl/bin")
-@end lisp
-
+@end ignore
 
 @node Remote shell setup
 @comment  node-name,  next,  previous,  up
@@ -1338,6 +774,7 @@ as:
 @cindex @file{.login} file
 @cindex shell init files
 
+@ignore
 As explained in the @ref{Overview} section, @value{u2-mode} connects to the
 remote host and talks to the shell it finds there.  Of course, when you
 log in, the shell executes its init files.  Suppose your init file
@@ -1474,142 +911,9 @@ shell is Bourne-ish already, then it might be prudent to omit the
 Bourne-ish?
 
 @end table
+@end ignore
 
-
-@node Auto-save and Backup
-@section Auto-save and Backup configuration
-@cindex auto-save
-@cindex backup
-@ifset emacs
-@vindex backup-directory-alist
-@end ifset
-@ifset xemacs
-@vindex bkup-backup-directory-info
-@end ifset
-
-Normally, @value{emacsname} writes backup files to the same directory
-as the original files, but this behavior can be changed via the
-variable
-@ifset emacs
-@code{backup-directory-alist}.
-@end ifset
-@ifset xemacs
-@code{bkup-backup-directory-info}.
-@end ifset
-In connection with @value{u2-mode}, this can have unexpected side effects.
-Suppose that you specify that all backups should go to the directory
-@file{~/.emacs.d/backups/}, and then you edit the file
-@file{@value{prefix}su@value{postfixhop}root@@localhost@value{postfix}/etc/secretfile}.
-The effect is that the backup file will be owned by you and not by
-root, thus possibly enabling others to see it even if they were not
-intended to see it.
-
-When
-@ifset emacs
-@code{backup-directory-alist}
-@end ifset
-@ifset xemacs
-@code{bkup-backup-directory-info}
-@end ifset
-is @code{nil} (the default), such problems do not occur.
-
-Therefore, it is useful to set special values for @value{u2-mode}
-files.  For example, the following statement effectively `turns off'
-the effect of
-@ifset emacs
-@code{backup-directory-alist}
-@end ifset
-@ifset xemacs
-@code{bkup-backup-directory-info}
-@end ifset
-for @value{u2-mode} files:
-
-@ifset emacs
-@lisp
-(add-to-list 'backup-directory-alist
-             (cons u2-mode-file-name-regexp nil))
-@end lisp
-@end ifset
-@ifset xemacs
-@lisp
-(require 'backup-dir)
-(add-to-list 'bkup-backup-directory-info
-             (list u2-mode-file-name-regexp ""))
-@end lisp
-@end ifset
-
-Another possibility is to use the @value{u2-mode} variable
-@ifset emacs
-@code{u2-mode-backup-directory-alist}.
-@end ifset
-@ifset xemacs
-@code{u2-mode-bkup-backup-directory-info}.
-@end ifset
-This variable has the same meaning like
-@ifset emacs
-@code{backup-directory-alist}.
-@end ifset
-@ifset xemacs
-@code{bkup-backup-directory-info}.
-@end ifset
-If a @value{u2-mode} file is backed up, and DIRECTORY is an absolute
-local file name, DIRECTORY is prepended with the @value{u2-mode} file
-name prefix of the file to be backed up.
-
-@noindent
-Example:
-
-@ifset emacs
-@lisp
-(add-to-list 'backup-directory-alist
-             (cons "." "~/.emacs.d/backups/"))
-(setq u2-mode-backup-directory-alist backup-directory-alist)
-@end lisp
-@end ifset
-@ifset xemacs
-@lisp
-(require 'backup-dir)
-(add-to-list 'bkup-backup-directory-info
-             (list "." "~/.emacs.d/backups/" 'full-path))
-(setq u2-mode-bkup-backup-directory-info bkup-backup-directory-info)
-@end lisp
-@end ifset
-
-@noindent
-The backup file name of
-@file{@value{prefix}su@value{postfixhop}root@@localhost@value{postfix}/etc/secretfile}
-would be
-@ifset emacs
-@file{@value{prefix}su@value{postfixhop}root@@localhost@value{postfix}~/.emacs.d/backups/!su:root@@localhost:!etc!secretfile~}
-@end ifset
-@ifset xemacs
-@file{@value{prefix}su@value{postfixhop}root@@localhost@value{postfix}~/.emacs.d/backups/![su!root@@localhost]!etc!secretfile~}
-@end ifset
-
-The same problem can happen with auto-saving files.
-@ifset emacs
-Since @value{emacsname} 21, the variable
-@code{auto-save-file-name-transforms} keeps information, on which
-directory an auto-saved file should go.  By default, it is initialized
-for @value{u2-mode} files to the local temporary directory.
-
-On some versions of @value{emacsname}, namely the version built for
-Debian GNU/Linux, the variable @code{auto-save-file-name-transforms}
-contains the directory where @value{emacsname} was built.  A
-workaround is to manually set the variable to a sane value.
-
-If auto-saved files should go into the same directory as the original
-files, @code{auto-save-file-name-transforms} should be set to @code{nil}.
-
-Another possibility is to set the variable
-@code{u2-mode-auto-save-directory} to a proper value.
-@end ifset
-@ifset xemacs
-For this purpose you can set the variable @code{auto-save-directory}
-to a proper value.
-@end ifset
-
-
+@ignore
 @node Windows setup hints
 @section Issues with Cygwin ssh
 @cindex Cygwin, issues
@@ -1658,35 +962,15 @@ the shell.
 If anyone knows how to start @command{ssh-agent} under Windows in such a
 way that desktop shortcuts can profit, please holler.  I don't really
 know anything at all about Windows@dots{}
-
+@end ignore
 
 @node Usage
 @chapter Using @value{u2-mode}
 @cindex using @value{u2-mode}
 
-Once you have installed @value{u2-mode} it will operate fairly transparently. You
-will be able to access files on any remote machine that you can log in
-to as though they were local.
-
-Files are specified to @value{u2-mode} using a formalized syntax specifying the
-details of the system to connect to.  This is similar to the syntax used
-by the @value{ftppackagename} package.
-
-@cindex type-ahead
-Something that might happen which surprises you is that
-@value{emacsname} remembers all your keystrokes, so if you see a
-password prompt from @value{emacsname}, say, and hit @kbd{@key{RET}}
-twice instead of once, then the second keystroke will be processed by
-@value{emacsname} after @value{u2-mode} has done its thing.  Why, this
-type-ahead is normal behavior, you say.  Right you are, but be aware
-that opening a remote file might take quite a while, maybe half a
-minute when a connection needs to be opened.  Maybe after half a
-minute you have already forgotten that you hit that key!
 
 @menu
 * Filename Syntax::             @value{u2-mode} filename conventions.
-* Alternative Syntax::          URL-like filename syntax.
-* Filename completion::         Filename completion.
 * Compilation::                 Compile remote files.
 @end menu
 
@@ -1762,120 +1046,10 @@ in my home directory I would specify the filename
 @file{@value{prefix}ssh@value{postfixhop}daniel@@melancholia@value{postfix}.emacs}.
 
 
-@node Alternative Syntax
-@section URL-like filename syntax
-@cindex filename syntax
-@cindex filename examples
-
-Additionally to the syntax described in the previous chapter, it is
-possible to use a URL-like syntax for @value{u2-mode}.  This can be
-switched on by customizing the variable @code{u2-mode-syntax}.  Please
-note that this feature is experimental for the time being.
-
-The variable @code{u2-mode-syntax} must be set before requiring @value{u2-mode}:
-
-@lisp
-(setq u2-mode-syntax 'url)
-(require 'u2-mode)
-@end lisp
-
-Then, a @value{u2-mode} filename would look like this:
-@file{/@var{method}://@var{user}@@@var{machine}:@var{port}/@var{path/to.file}}.
-@file{/@var{method}://} is mandatory, all other parts are optional.
-@file{:@var{port}} is useful for methods only who support this.
-
-The last example from the previous section would look like this:
-@file{/ssh://daniel@@melancholia/.emacs}.
-
-For the time being, @code{u2-mode-syntax} can have the following values:
-
-@itemize @w{}
-@ifset emacs
-@item @code{ftp} -- That is the default syntax
-@item @code{url} -- URL-like syntax
-@end ifset
-@ifset xemacs
-@item @code{sep} -- That is the default syntax
-@item @code{url} -- URL-like syntax
-@item @code{ftp} -- EFS-like syntax
-@end ifset
-@end itemize
-
-
-@node Filename completion
-@section Filename completion
-@cindex filename completion
-
-Filename completion works with @value{u2-mode} for both completing methods,
-user names and machine names (except multi hop methods) as well as for
-files on remote machines.
-
-If you, for example, type @kbd{C-x C-f @value{prefix}t
-@key{TAB}}, @value{u2-mode} might give you as result the choice for
-
-@example
-@ifset emacs
-@value{prefixhop}telnet@value{postfixhop}				   tmp/
-@value{prefixhop}toto@value{postfix}
-@end ifset
-@ifset xemacs
-@value{prefixhop}telnet@value{postfixhop}				   @value{prefixhop}toto@value{postfix}
-@end ifset
-@end example
-
-@samp{@value{prefixhop}telnet@value{postfixhop}}
-is a possible completion for the respective method,
-@ifset emacs
-@samp{tmp/} stands for the directory @file{/tmp} on your local
-machine,
-@end ifset
-and @samp{@value{prefixhop}toto@value{postfix}}
-might be a host @value{u2-mode} has detected in your @file{~/.ssh/known_hosts}
-file (given you're using default method @option{ssh}).
-
-If you go on to type @kbd{e @key{TAB}}, the minibuffer is completed to
-@samp{@value{prefix}telnet@value{postfixhop}}.
-Next @kbd{@key{TAB}} brings you all machine names @value{u2-mode} detects in
-your @file{/etc/hosts} file, let's say
-
-@example
-@value{prefixhop}telnet@value{postfixhop}127.0.0.1@value{postfix}		   @value{prefixhop}telnet@value{postfixhop}192.168.0.1@value{postfix}
-@value{prefixhop}telnet@value{postfixhop}localhost@value{postfix}		   @value{prefixhop}telnet@value{postfixhop}melancholia.danann.net@value{postfix}
-@value{prefixhop}telnet@value{postfixhop}melancholia@value{postfix}
-@end example
-
-Now you can choose the desired machine, and you can continue to
-complete file names on that machine.
-
-If the configuration files (@pxref{Customizing Completion}), which
-@value{u2-mode} uses for analysis of completion, offer user names, those user
-names will be taken into account as well.
-
-
 @node Compilation
 @section Compile remote files
 @cindex compile
 @cindex recompile
-
-@value{u2-mode} provides commands for compilation of files on remote
-machines.  In order to get them loaded, you need to require
-@file{u2-mode-util.el}:
-
-@lisp
-(require 'u2-mode-util)
-@end lisp
-
-Afterwards, you can use the commands @code{u2-mode-compile} and
-@code{u2-mode-recompile} instead of @code{compile} and @code{recompile},
-respectively; @inforef{Compilation, ,@value{emacsdir}}.  This does not
-work for the @option{ftp} and @option{smb} methods.
-
-The corresponding key bindings and menu entries calling these commands
-are redefined automatically for buffers associated with remote files.
-
-After finishing the compilation, you can use the usual commands like
-@code{previous-error}, @code{next-error} and @code{first-error} for
-navigation in the @file{*Compilation*} buffer.
 
 
 @node Bug Reports
@@ -1883,13 +1057,14 @@ navigation in the @file{*Compilation*} buffer.
 @cindex bug reports
 
 Bugs and problems with @value{u2-mode} are actively worked on by the
-development team. Feature requests and suggestions are also more than
-welcome.
+development team (me :-). Feature requests and suggestions are also more
+than welcome.
 
 The @value{u2-mode} mailing list is a great place to get information on
 working with @value{u2-mode}, solving problems and general discussion
 and advice on topics relating to the package.
 
+@ignore
 The mailing list is at @email{u2-mode-devel@@gnu.org}.  Messages sent to
 this address go to all the subscribers. This is @emph{not} the address
 to send subscription requests to.
@@ -1901,6 +1076,7 @@ the @value{u2-mode} Mail Subscription Page}.
 To report a bug in @value{u2-mode}, you should execute @kbd{M-x
 u2-mode-bug}. This will automatically generate a buffer with the details
 of your system and @value{u2-mode} version.
+@end ignore
 
 When submitting a bug report, please try to describe in excruciating
 detail the steps required to reproduce the problem, the setup of the
@@ -1909,13 +1085,6 @@ remote machine and any special conditions that exist.
 If you can identify a minimal test case that reproduces the problem,
 include that with your bug report.  This will make it much easier for
 the development team to analyze and correct the problem.
-
-Before reporting the bug, you should set the verbosity level to 9
-(@pxref{Traces and Profiles, Traces}) in the @file{~/.emacs} file and
-repeat the bug.  Then, include the contents of the @file{*u2-mode/foo*}
-and @file{*debug u2-mode/foo*} buffers in your bug report.  A verbosity
-level greater than 9 will produce a very huge debug buffer, which is
-mostly not necessary for the analysis.
 
 Please be aware that, with a verbosity level of 9 or greater, the
 contents of files and directories will be included in the debug
@@ -1928,6 +1097,7 @@ buffer.
 @cindex FAQ
 
 @itemize @bullet
+@ignore
 @item
 Where can I get the latest @value{u2-mode}?
 
@@ -1941,617 +1111,23 @@ There is also a Savannah project page.
 
 @noindent
 @uref{http://savannah.gnu.org/projects/u2-mode/}
+@end ignore
 
 @item
 Which systems does it work on?
 
-The package has been used successfully on GNU Emacs 21, GNU Emacs 22
-and XEmacs 21 (starting with 21.4).
+The package has been used successfully on GNU Emacs 21 @c, GNU Emacs 22
+@c and XEmacs 21 (starting with 21.4)
+.
 
 The package was intended to work on Unix, and it really expects a
-Unix-like system on the remote end (except the @option{smb} method),
-but some people seemed to have some success getting it to work on MS
-Windows NT/2000/XP @value{emacsname}.
+Unix-like system on the remote end.
 
-There is some informations on @value{u2-mode} on NT at the following URL;
-many thanks to Joe Stoy for providing the information:
-@uref{ftp://ftp.comlab.ox.ac.uk/tmp/Joe.Stoy/}
-
-@c The link is broken. I've contacted Tom for clarification. Michael.
-@ignore
-The above mostly contains patches to old ssh versions; Tom Roche has a
-Web page with instructions:
-@uref{http://www4.ncsu.edu/~tlroche/plinkU2-Mode.html}
-@end ignore
-
-??? Can somebody provide some information for getting it to work on NT
-Emacs?  I think there was some issue with @command{ssh}?
-
-
-@item
-I can't stop @value{ftppackagename} starting with @value{emacsname}
-
-@ifset emacs
-@value{ftppackagename} is loaded from @value{u2-mode} automatically if you
-require a file by the ftp method.  Unfortunately, there are some Lisp
-packages which make @value{ftppackagename} file name handlers active.
-You can see it applying @kbd{C-h v file-name-handler-alist}:
-
-@example
-file-name-handler-alist's value is
-(("^/[^/:]*\\'" . ange-ftp-completion-hook-function)
- ("^/[^/:]*[^/:.]:" . ange-ftp-hook-function)
- ("^/[^/]*$" . u2-mode-completion-file-name-handler)
- ("\\`/[^/:]+:" . u2-mode-file-name-handler)
- ("\\`/:" . file-name-non-special))
-@end example
-
-Please try to find out which package is responsible for loading
-@value{ftppackagename}, and raise a bug report.
-
-A workaround is to require @value{ftppackagename} before @value{u2-mode} in
-your @file{~/.emacs}, because @value{u2-mode} cleans up the entries in
-@code{file-name-handler-alist}:
-
-@lisp
-;; @value{ftppackagename} temporarily required
-(require 'ange-ftp)
-;; @value{u2-mode} cleans up @code{file-name-handler-alist}
-(require 'u2-mode)
-@end lisp
-@end ifset
-
-@ifset xemacs
-Not all the older versions of @value{u2-mode} supported @value{emacsname}
-correctly.  The first thing to do is to make sure that you have the
-latest version of @value{u2-mode} installed.
-
-If you do, please try and find out exactly the conditions required for
-the @value{ftppackagename} handlers to fire.  If you can, putting a
-breakpoint on @code{efs-ftp-path} and sending in the stack trace along
-with your bug report would make it easier for the developers to work out
-what is going wrong.
-@end ifset
-
-
-@item
-File name completion does not work with @value{u2-mode}
-
-When you log in to the remote machine, do you see the output of
-@command{ls} in color? If so, this may be the cause of your problems.
-
-@command{ls} outputs @acronym{ANSI} escape sequences that your terminal
-emulator interprets to set the colors.  These escape sequences will
-confuse @value{u2-mode} however.
-
-In your @file{.bashrc}, @file{.profile} or equivalent on the remote
-machine you probably have an alias configured that adds the option
-@option{--color=yes} or @option{--color=auto}.
-
-You should remove that alias and ensure that a new login @emph{does not}
-display the output of @command{ls} in color.  If you still cannot use
-filename completion, report a bug to the @value{u2-mode} developers.
-
-
-@item
-File name completion does not work in large directories
-
-@value{u2-mode} uses globbing for some operations.  (Globbing means to use the
-shell to expand wildcards such as `*.c'.)  This might create long
-command lines, especially in directories with many files.  Some shells
-choke on long command lines, or don't cope well with the globbing
-itself.
-
-If you have a large directory on the remote end, you may wish to execute
-a command like @samp{ls -d * ..?* > /dev/null} and see if it hangs.
-Note that you must first start the right shell, which might be
-@command{/bin/sh}, @command{ksh} or @command{bash}, depending on which
-of those supports tilde expansion.
-
-
-@item
-How can I get notified when @value{u2-mode} file transfers are complete?
-
-The following snippet can be put in your @file{~/.emacs} file.  It
-makes @value{emacsname} beep after reading from or writing to the
-remote host.
-
-@lisp
-(defadvice u2-mode-handle-write-region
-  (after u2-mode-write-beep-advice activate)
- " make u2-mode beep after writing a file."
- (interactive)
- (beep))
-(defadvice u2-mode-handle-do-copy-or-rename-file
-  (after u2-mode-copy-beep-advice activate)
- " make u2-mode beep after copying a file."
- (interactive)
- (beep))
-(defadvice u2-mode-handle-insert-file-contents
-  (after u2-mode-copy-beep-advice activate)
- " make u2-mode beep after copying a file."
- (interactive)
- (beep))
-@end lisp
-
-
-@ifset emacs
-@item
-I'ld like to see a host indication in the mode line when I'm remote
-
-The following code has been tested with @value{emacsname} 22.  You
-should put it into your @file{~/.emacs}:
-
-@lisp
-(defconst my-mode-line-buffer-identification
-  (list
-   '(:eval
-     (let ((host-name
-	    (if (file-remote-p default-directory)
-		(u2-mode-file-name-host
-		 (u2-mode-dissect-file-name default-directory))
-	      (system-name))))
-       (if (string-match "^[^0-9][^.]*\\(\\..*\\)" host-name)
-	   (substring host-name 0 (match-beginning 1))
-	 host-name)))
-   ": %12b"))
-
-(setq-default
- mode-line-buffer-identification
- my-mode-line-buffer-identification)
-
-(add-hook
- 'dired-mode-hook
- '(lambda ()
-    (setq
-     mode-line-buffer-identification
-     my-mode-line-buffer-identification)))
-@end lisp
-@end ifset
-
-
-@item
-There's this @file{~/.sh_history} file on the remote host which keeps
-growing and growing.  What's that?
-
-Sometimes, @value{u2-mode} starts @command{ksh} on the remote host for
-tilde expansion.  Maybe @command{ksh} saves the history by default.
-@value{u2-mode} tries to turn off saving the history, but maybe you have
-to help.  For example, you could put this in your @file{.kshrc}:
-
-@example
-if [ -f $HOME/.sh_history ] ; then
-   /bin/rm $HOME/.sh_history
-fi
-if [ "$@{HISTFILE-unset@}" != "unset" ] ; then
-   unset HISTFILE
-fi
-if [ "$@{HISTSIZE-unset@}" != "unset" ] ; then
-   unset HISTSIZE
-fi
-@end example
-
-
-@item
-@value{u2-mode} doesn't transfer strings with more than 500 characters
-correctly
-
-On some few systems, the implementation of @code{process-send-string}
-seems to be broken for longer strings.  This case, you should
-customize the variable @code{u2-mode-chunksize} to 500.  For a
-description how to determine whether this is necessary see the
-documentation of @code{u2-mode-chunksize}.
-
-
-@item There are longish file names to type. How to shorten this?
-
-Let's say you need regularly access to
-@file{@value{prefix}ssh@value{postfixhop}news@@news.my.domain@value{postfix}/opt/news/etc},
-which is boring to type again and again.  The following approaches can
-be mixed:
-
-@enumerate
-
-@item Use default values for method and user name:
-
-You can define default methods and user names for hosts,
-(@pxref{Default Method}, @pxref{Default User}):
-
-@lisp
-(setq u2-mode-default-method "ssh"
-      u2-mode-default-user "news")
-@end lisp
-
-The file name left to type would be
-@kbd{C-x C-f @value{prefix}news.my.domain@value{postfix}/opt/news/etc}.
-
-Note, that there are some useful settings already.  Accessing your
-local host as @samp{root} user, is possible just by @kbd{C-x C-f
-@value{prefix}su@value{postfixhop}@value{postfix}}.
-
-@item Use configuration possibilities of your method:
-
-Several connection methods (i.e. the programs used) offer powerful
-configuration possibilities (@pxref{Customizing Completion}).  In the
-given case, this could be @file{~/.ssh/config}:
-
-@example
-Host xy
-     HostName news.my.domain
-     User news
-@end example
-
-The file name left to type would be @kbd{C-x C-f
-@value{prefix}ssh@value{postfixhop}xy@value{postfix}/opt/news/etc}.
-Depending on files in your directories, it is even possible to
-complete the hostname with @kbd{C-x C-f
-@value{prefix}ssh@value{postfixhop}x @key{TAB}}.
-
-@item Use environment variables:
-
-File names typed in the minibuffer can be expanded by environment
-variables.  You can set them outside @value{emacsname}, or even with
-Lisp:
-
-@lisp
-(setenv "xy" "@value{prefix}ssh@value{postfixhop}news@@news.my.domain@value{postfix}/opt/news/etc/")
-@end lisp
-
-Then you need simply to type @kbd{C-x C-f $xy @key{RET}}, and here you
-are.  The disadvantage is, that you cannot edit the file name, because
-environment variables are not expanded during editing in the
-minibuffer.
-
-@item Define own keys:
-
-You can define your own key sequences in @value{emacsname}, which can
-be used instead of @kbd{C-x C-f}:
-
-@lisp
-(global-set-key
- [(control x) (control y)]
- (lambda ()
-   (interactive)
-   (find-file
-    (read-file-name
-     "Find U2-Mode file: "
-     "@value{prefix}ssh@value{postfixhop}news@@news.my.domain@value{postfix}/opt/news/etc/"))))
-@end lisp
-
-Simply typing @kbd{C-x C-y} would initialize the minibuffer for
-editing with your beloved file name.
-
-See also @uref{http://www.emacswiki.org/cgi-bin/wiki/U2-ModeMode, the
-Emacs Wiki} for a more comprehensive example.
-
-@item Define own abbreviation (1):
-
-It is possible to define an own abbreviation list for expanding file
-names:
-
-@lisp
-(add-to-list
- 'directory-abbrev-alist
- '("^/xy" . "@value{prefix}ssh@value{postfixhop}news@@news.my.domain@value{postfix}/opt/news/etc/"))
-@end lisp
-
-This shortens the file openening command to @kbd{C-x C-f /xy
-@key{RET}}.  The disadvantage is, again, that you cannot edit the file
-name, because the expansion happens after entering the file name only.
-
-@item Define own abbreviation (2):
-
-The @code{abbrev-mode} gives more flexibility for editing the
-minibuffer:
-
-@lisp
-(define-abbrev-table 'my-u2-mode-abbrev-table
-  '(("xy" "@value{prefix}ssh@value{postfixhop}news@@news.my.domain@value{postfix}/opt/news/etc/")))
-
-(add-hook
- 'minibuffer-setup-hook
- '(lambda ()
-    (abbrev-mode 1)
-    (setq local-abbrev-table my-u2-mode-abbrev-table)))
-
-(defadvice minibuffer-complete
-  (before my-minibuffer-complete activate)
-  (expand-abbrev))
-
-;; If you use partial-completion-mode
-(defadvice PC-do-completion
-  (before my-PC-do-completion activate)
-  (expand-abbrev))
-@end lisp
-
-After entering @kbd{C-x C-f xy @key{TAB}}, the minibuffer is
-expanded, and you can continue editing.
-@end enumerate
 @end itemize
-
-
-@c For the developer
-@node Version Control
-@chapter The inner workings of remote version control
-@cindex Version Control
-
-Unlike @value{ftppackagename}, @value{u2-mode} has full shell access to the
-remote machine. This makes it possible to provide version control for
-files accessed under @value{u2-mode}.
-
-The actual version control binaries must be installed on the remote
-machine, accessible in the directories specified in
-@var{u2-mode-remote-path}.
-
-This transparent integration with the version control systems is one of
-the most valuable features provided by @value{u2-mode}, but it is far from perfect.
-Work is ongoing to improve the transparency of the system.
-
-@menu
-* Version Controlled Files::    Determining if a file is under version control.
-* Remote Commands::             Executing the version control commands on the remote machine.
-* Changed workfiles::           Detecting if the working file has changed.
-* Checking out files::          Bringing the workfile out of the repository.
-* Miscellaneous Version Control::  Things related to Version Control that don't fit elsewhere.
-@end menu
-
-
-@node Version Controlled Files
-@section Determining if a file is under version control
-
-The VC package uses the existence of on-disk revision control master
-files to determine if a given file is under revision control. These file
-tests happen on the remote machine through the standard @value{u2-mode} mechanisms.
-
-
-@node Remote Commands
-@section Executing the version control commands on the remote machine
-
-There are no hooks provided by VC to allow intercepting of the version
-control command execution. The calls occur through the
-@code{call-process} mechanism, a function that is somewhat more
-efficient than the @code{shell-command} function but that does not
-provide hooks for remote execution of commands.
-
-To work around this, the functions @code{vc-do-command} and
-@code{vc-simple-command} have been advised to intercept requests for
-operations on files accessed via @value{u2-mode}.
-
-In the case of a remote file, the @code{shell-command} interface is
-used, with some wrapper code, to provide the same functionality on the
-remote machine as would be seen on the local machine.
-
-
-@node Changed workfiles
-@section Detecting if the working file has changed
-
-As there is currently no way to get access to the mtime of a file on a
-remote machine in a portable way, the @code{vc-workfile-unchanged-p}
-function is advised to call an @value{u2-mode} specific function for remote files.
-
-The @code{u2-mode-vc-workfile-unchanged-p} function uses the functioning VC
-diff functionality to determine if any changes have occurred between the
-workfile and the version control master.
-
-This requires that a shell command be executed remotely, a process that
-is notably heavier-weight than the mtime comparison used for local
-files. Unfortunately, unless a portable solution to the issue is found,
-this will remain the cost of remote version control.
-
-
-@node Checking out files
-@section Bringing the workfile out of the repository
-
-VC will, by default, check for remote files and refuse to act on them
-when checking out files from the repository. To work around this
-problem, the function @code{vc-checkout} knows about @value{u2-mode} files and
-allows version control to occur.
-
-
-@node Miscellaneous Version Control
-@section Things related to Version Control that don't fit elsewhere
-
-Minor implementation details, &c.
-
-@menu
-* Remote File Ownership::       How VC determines who owns a workfile.
-* Back-end Versions::           How VC determines what release your RCS is.
-@end menu
-
-
-@node Remote File Ownership
-@subsection How VC determines who owns a workfile
-
-@value{emacsname} provides the @code{user-full-name} function to
-return the login name of the current user as well as mapping from
-arbitrary user id values back to login names. The VC code uses this
-functionality to map from the uid of the owner of a workfile to the
-login name in some circumstances.
-
-This will not, for obvious reasons, work if the remote system has a
-different set of logins. As such, it is necessary to delegate to the
-remote machine the job of determining the login name associated with a
-uid.
-
-Unfortunately, with the profusion of distributed management systems such
-as @code{NIS}, @code{NIS+} and @code{NetInfo}, there is no simple,
-reliable and portable method for performing this mapping.
-
-Thankfully, the only place in the VC code that depends on the mapping of
-a uid to a login name is the @code{vc-file-owner} function. This returns
-the login of the owner of the file as a string.
-
-This function has been advised to use the output of @command{ls} on the
-remote machine to determine the login name, delegating the problem of
-mapping the uid to the login to the remote system which should know more
-about it than I do.
-
-
-@node Back-end Versions
-@subsection How VC determines what release your RCS is
-
-VC needs to know what release your revision control binaries you are
-running as not all features VC supports are available with older
-versions of @command{rcs(1)}, @command{cvs(1)} or @command{sccs(1)}.
-
-The default implementation of VC determines this value the first time it
-is needed and then stores the value globally to avoid the overhead of
-executing a process and parsing its output each time the information is
-needed.
-
-Unfortunately, life is not quite so easy when remote version control
-comes into the picture. Each remote machine may have a different version
-of the version control tools and, while this is painful, we need to
-ensure that unavailable features are not used remotely.
-
-To resolve this issue, @value{u2-mode} currently takes the sledgehammer
-approach of making the release values of the revision control tools
-local to each @value{u2-mode} buffer, forcing VC to determine these values
-again each time a new file is visited.
-
-This has, quite obviously, some performance implications. Thankfully,
-most of the common operations performed by VC do not actually require
-that the remote version be known. This makes the problem far less
-apparent.
-
-Eventually these values will be captured by @value{u2-mode} on a system by
-system basis and the results cached to improve performance.
-
-
-@node Files directories and localnames
-@chapter How file names, directories and localnames are mangled and managed.
-
-@menu
-* Localname deconstruction::    Breaking a localname into its components.
-@end menu
-
-
-@node Localname deconstruction
-@section Breaking a localname into its components.
-
-@value{u2-mode} file names are somewhat different, obviously, to ordinary file
-names. As such, the lisp functions @code{file-name-directory} and
-@code{file-name-nondirectory} are overridden within the @value{u2-mode}
-package.
-
-Their replacements are reasonably simplistic in their approach. They
-dissect the filename, call the original handler on the localname and
-then rebuild the @value{u2-mode} file name with the result.
-
-This allows the platform specific hacks in the original handlers to take
-effect while preserving the @value{u2-mode} file name information.
-
-
-@node Traces and Profiles
-@chapter How to Customize Traces
-
-@value{u2-mode} debug messages are written into a special buffer.  This
-must be enabled by the following settings:
-
-@lisp
-(setq u2-mode-verbose 9 ;; very verbose
-      u2-mode-debug-buffer t)
-@end lisp
-
-Every message @value{u2-mode} writes into this buffer has a verbosity
-level.  The verbosity level can be any number between 0 and 10.  Only
-messages with a verbosity level less or equal to @code{u2-mode-verbose}
-are written.
-
-The verbosity levels are
-
-          @w{ 0}  silent (no @value{u2-mode} messages at all)
-@*@indent @w{ 1}  errors
-@*@indent @w{ 2}  warnings
-@*@indent @w{ 3}  connection to remote hosts (default verbosity)
-@*@indent @w{ 4}  activities
-@*@indent @w{ 5}  internal
-@*@indent @w{ 6}  caching
-@*@indent @w{ 9}  sent and received strings
-@*@indent @w{10}  traces (huge)
-
-The debug buffer is in
-@ifset emacs
-@ref{Outline Mode, , , @value{emacsdir}}.
-@end ifset
-@ifset xemacs
-Outline Mode.
-@end ifset
-That means, you can change the level of messages to be viewed.  If you
-want, for example, see only messages up to verbosity level 5, you must
-enter @kbd{C-u 5 C-c C-q}.
-@ifset emacs
-Other keys for navigating are described in @ref{Outline Visibility, ,
-, @value{emacsdir}}.
-@end ifset
-
-@value{u2-mode} errors are handled internally in order to raise the
-verbosity level 1 messages.  When you want to get a Lisp backtrace in
-case of an error, you need to set both
-
-@lisp
-(setq debug-on-error t
-      debug-on-signal t)
-@end lisp
 
 
 @node Issues
 @chapter Debatable Issues and What Was Decided
-
-@itemize @bullet
-@item The uuencode method does not always work.
-
-Due to the design of @value{u2-mode}, the encoding and decoding programs
-need to read from stdin and write to stdout.  On some systems,
-@command{uudecode -o -} will read stdin and write the decoded file to
-stdout, on other systems @command{uudecode -p} does the same thing.
-But some systems have uudecode implementations which cannot do this at
-all---it is not possible to call these uudecode implementations with
-suitable parameters so that they write to stdout.
-
-Of course, this could be circumvented: the @code{begin foo 644} line
-could be rewritten to put in some temporary file name, then
-@command{uudecode} could be called, then the temp file could be
-printed and deleted.
-
-But I have decided that this is too fragile to reliably work, so on some
-systems you'll have to do without the uuencode methods.
-
-@item The @value{u2-mode} filename syntax differs between GNU Emacs and XEmacs.
-
-The GNU Emacs maintainers wish to use a unified filename syntax for
-Ange-FTP and @value{u2-mode} so that users don't have to learn a new
-syntax.  It is sufficient to learn some extensions to the old syntax.
-
-For the XEmacs maintainers, the problems caused from using a unified
-filename syntax are greater than the gains.  The XEmacs package system
-uses EFS for downloading new packages.  So, obviously, EFS has to be
-installed from the start.  If the filenames were unified, @value{u2-mode}
-would have to be installed from the start, too.
-
-@ifset xemacs
-@strong{Note:} If you'ld like to use a similar syntax like
-@value{ftppackagename}, you need the following settings in your init
-file:
-
-@lisp
-(setq u2-mode-unified-filenames t)
-(require 'u2-mode)
-@end lisp
-
-The autoload of the @value{emacsname} @value{u2-mode} package must be
-disabled.  This can be achieved by setting file permissions @code{000}
-to the files @file{.../xemacs-packages/lisp/u2-mode/auto-autoloads.el*}.
-
-In case of unified filenames, all @value{emacsname} download sites are
-added to @code{u2-mode-default-method-alist} with default method
-@option{ftp} @xref{Default Method}.  These settings shouldn't be
-touched for proper working of the @value{emacsname} package system.
-
-The syntax for unified filenames is described in the @value{u2-mode} manual
-for @value{emacsothername}.
-@end ifset
-@end itemize
 
 @node Concept Index
 @comment node-name,    next,  previous,      up
@@ -2560,22 +1136,3 @@ for @value{emacsothername}.
 @contents
 @c End of u2-mode.texi - the U2-MODE User Manual
 @bye
-
-@c TODO
-@c
-@c * Say something about the .login and .profile files of the remote
-@c   shells.
-@c * Explain how u2-mode.el works in principle: open a shell on a remote
-@c   host and then send commands to it.
-@c * Mention that bookmarks are a cool feature to go along with U2-Mode.
-@c * Make terminology "inline" vs "out-of-band" consistent.
-@c   It seems that "external" is also used instead of "out-of-band".
-
-@c * M. Albinus
-@c ** Use `filename' resp. `file name' consistently.
-@c ** Use `host' resp. `machine' consistently.
-@c ** Consistent small or capitalized words especially in menues.
-
-@ignore
-   arch-tag: f96dd66e-6dd3-4c92-8d77-9c56205ba808
-@end ignore

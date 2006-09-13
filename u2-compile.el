@@ -166,9 +166,16 @@ command here, and it will be used instead of the default `RUN'"
 
 (defun %u2-join (list &optional separator)
   (let ((separator (%u2-stringize (or separator " "))))
-    (mapconcat (lambda (x) (format "%s" x)) list separator)))
+    (mapconcat (lambda (x) (%u2-stringize x)) list separator)))
 
 (defun* %u2-alist-get-string (string alist)
+  "Find STRING in ALIST, and return the result of the transform in
+ALIST.  Each member of ALIST is of the form 
+\\(REGEX . TRANSFORMER\\). TRANSFORMER is either a string, which will 
+replace STRING with `replace-match', and the resulting string
+returned, or a function taking a single string argument, which will be
+`apply'ed to STRING, and should return a string, which will be
+returned from the function."
   (save-match-data
     (dolist (a alist)
       (if (string-match (car a) string)
@@ -200,8 +207,8 @@ resort."
     (cond ((%u2-alist-get-string dir-name unibasic-dir-to-table-alist))
           ((string-match ".*/\\([^/]+\\)/[^/]*\\'" file-name)
            (match-string 1 file-name))
-          (unibasic-source-table unibasic-source-table)
-          (t (unibasic-default-source-table file-name)))))
+          (unibasic-source-table)
+          (t unibasic-default-source-table))))
 
 
 
@@ -246,11 +253,11 @@ all Catalog commands."
              
 (defvar unidata-record-commands ())
 
-(defun unidata-command-on-record (command ud-proc table recid &rest opt)
+(defun unidata-command-on-record (command ud-proc table recid &rest rest)
   "Perform a command on a Unidata Record with RECID in TABLE.  COMMAND
 can be a string, it is used as a format string called with TABLE and
 RECID, in that order, as arguments to `format'. If it is a function,
-that function is called with TABLE and RECID as arguments to get the
+that function is called with (TABLE  RECID . REST) as arguments to get the
 command string sent to the Unidata process.  If it is a symbol, it is
 used as a key to `unidata-record-commands', and the associated value
 is used as if it were passed as COMMAND; if COMMAND is not there
@@ -269,7 +276,7 @@ to Unidata."
                   (cond (a (setf command (cdr a)))
                         ((functionp command) (setf command (symbol-function command)))
                         (t (setf command (concat (upcase (symbol-name command)) " %s %s"))))))
-        (function (setf cmd-string (apply command (list* table recid opt))))
+        (function (setf cmd-string (apply command (list* table recid rest))))
         (t (signal 'wrong-type-argument (list command)))))
     (setf cmd-string cmd-string)
     (unidata-send-command ud-proc cmd-string)))
@@ -318,7 +325,7 @@ used as the record id.  COMMAND should be one defined with
 
 (defmacro define-unidata-record-action (name args &rest body)
   "Define an action which can be acted upon a UniData Record.  If this
-is defined just a string, it will be used as a format string, and
+is defined as just a string, it will be used as a format string, and
 format will be applied to the table, record-id and the &rest of the
 args, in that order.  Otherwise, it should be a named lambda form,
 which takes the table, record-id, any optional arguments it needs, and
@@ -344,8 +351,7 @@ command."
 (define-unidata-record-action catalog (table recid &optional objtable scope forcep)
   (let ((scope (if scope (upcase (format "%s" scope)) ""))
         (force (if t "FORCE" ""))
-        (objtable (if objtable objtable (unibasic-get-object-table table)))
-        (_ " "))
+        (objtable (if objtable objtable (unibasic-get-object-table table))))
     (%u2-join (list unibasic-catalog-command objtable recid scope force))))
 
 

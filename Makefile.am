@@ -8,6 +8,3 @@ BUILT_SOURCES = u2-modever.texi
 
 info_TEXINFOS = u2-modeinst.texi u2-mode.texi u2-modever.texi
 
-
-u2-modever.texi: u2-modever.texi.in
-	sed -e 's/@
