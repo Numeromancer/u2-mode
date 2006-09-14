@@ -1,2 +1,7 @@
 semantic.cache
 *.elc
+Makefile
+configure
+Makefile.in
+u2ver.el
+aclocal.m4
