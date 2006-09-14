@@ -956,7 +956,7 @@ and checking for the presence of `unibasic-label-regexp' or
                                "")))
                 (if evenp
                     (replace-match
-                     (concat (match-string mix) spaces "") nil nil nil mix)
+                     (concat (match-string mix) spaces "") nil t nil mix)
                   (replace-match " " nil nil nil mix)) ) ) )
           (indent-according-to-mode)
           (forward-line))))))
@@ -1426,6 +1426,12 @@ character and not as an operator.")
 
 ;;
 ;; $Log$
+;; Revision 1.8  2006/09/14 21:09:12  numeromancer
+;; Set the LITERAL parameter of `replace-match' to `t'. With the
+;; LITERAL parm of replace-match set to nil, the match was failing on
+;; lines with `\' in them.  This is a string delimiter in UniBasic, so it
+;; should align these.
+;;
 ;; Revision 1.7  2006/09/05 17:39:17  numeromancer
 ;; Fixed a bug from left-over local q function, and with different arg specs
 ;; for extra args for u2-compile actions.  Changed email address to my
