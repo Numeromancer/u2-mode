@@ -240,12 +240,11 @@ these parts, so you should usually call that, rather than using this
 directly.")
 
 (defun unidata-split-host-path (path)
-  "Split a remote path name into its consituent parts.
-These are the host, the user, the directory, and the connection method
-(for using with tramp). All but the method name /must/ be in the
-string or the extraction will fail.  The path-string should look like
-this: `/<method>:<user>@<host>:<remote path>'. The resulting list
-looks like this : (<host> <user> <remote directory> <method>)."
+  "Split a remote path name into its consituent parts.  These are the
+host, the user, the directory, and the connection method . All but the
+method name must be in the string or the extraction will fail.  The
+path string should look like  /method:user@host:remote-path. The
+resulting list looks like (host user remote-directory method)."
   (save-match-data
     (if (string-match  unidata-path-splitting-regexp  path)
         (list 

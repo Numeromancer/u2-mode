@@ -50,15 +50,15 @@
 (require 'u2-cache)
 (eval-when-compile (require 'cl))
 
-(defconst unidata-rcs-version
+(defconst u2-mode-cvs-version
   "@(#)$Id$"
   "CVS version info for `unidata-mode'.")
 
-(defconst unidata-mode-version
-  (if (string-match "\\<[0-9]+\\.[0-9]+\\>" unidata-rcs-version)
-      (substring unidata-rcs-version (match-beginning 0) (match-end 0))
+(defconst u2-mode-version
+  (if (string-match "\\<[0-9]+\\.[0-9]+\\>" u2-mode-cvs-version)
+      (substring u2-mode-cvs-version (match-beginning 0) (match-end 0))
     "0.0")
-  "The current version of `unidata-mode' in use.
+  "The current version of `u2-mode' in use.
 The current version was set up to conform to reserved words specified for
 UniData 3.3. For other versions you may need to adjust the lists of special
 words at the end of unidata.el and then regenerate the font-lock regular
@@ -345,13 +345,11 @@ cataloging.")
 
 ;; TODO: is this run outsid the unidata buffer?
 (defun unidata-set-mode-name ()
-    (set-buffer (process-buffer unidata-process))
     (setq mode-name (concat "Unidata(" unidata-account-path ")")))
 
 (defun unidata-logto-hook (cmd-list)
   (save-excursion
     ;; TODO: is this necessary?
-    (set-buffer (process-buffer unidata-process))
     (setq unidata-account-path (car (cdr cmd-list)))
     (unidata-set-mode-name)
     cmd-list))
@@ -518,13 +516,6 @@ cataloging.")
   ;; Turn off paging, set terminal to really wide
   (accept-process-output proc))
 
-(defun unidata-pre-ud-filter (proc string)
-  (save-current-buffer
-    (set-buffer (process-buffer proc))
-    (let ((case-fold-search t))
-      (cond ((string-match unidata-shell-prompt-regexp string)
-             (set-process-filter proc 'unidata-post-ud-filter)
-             (unidata-get-to-ud proc))))))
 
 
 (defun unidata-strip-extra-lines (string)
@@ -539,6 +530,14 @@ cataloging.")
          (set-process-filter proc 'unidata-filter)
          (unidata-send-command proc "TERM 200,0")))
   (unidata-filter proc string))
+
+(defun unidata-pre-ud-filter (proc string)
+  (save-current-buffer
+    (set-buffer (process-buffer proc))
+    (let ((case-fold-search t))
+      (cond ((string-match unidata-shell-prompt-regexp string)
+             (set-process-filter proc 'unidata-post-ud-filter)
+             (unidata-get-to-ud proc))))))
 
 (defun unidata-remote-initial-filter (proc string)
   ;For reading up to and including password; also will get machine type.
@@ -821,6 +820,67 @@ record."
       (setq mode-name (concat mode-name "(" unidata-account-path ")"))))
 
 
+(put 'unidata-account-path 'permanent-local t)
+(put 'unidata-host 'permanent-local t)
+(put 'unidata-process 'permanent-local t)
+(put 'unidata-user 'permanent-local t)
+(put 'unidata-full-path 'permanent-local t)
+
+
+(defvar u2-connection-method-defaults
+  '((u2-connection-function u2-open-connection-rsh)
+   (u2-login-program "telnet")
+   (u2-remote-sh "/bin/sh")
+   (u2-login-args nil)
+   (u2-file-prefix "")
+   (u2-password-end-of-line "\n")))
+
+
+(defvar u2-connection-method-alist
+  '(("local" 
+     (u2-connection-function u2-open-local-connection)
+     (u2-login-program nil)
+     (u2-remote-sh "/bin/sh")
+     (u2-login-args nil)
+     (u2-file-prefix nil)
+     (u2-password-end-of-line nil))
+    ("telnet" 
+     (u2-connection-function u2-open-remote-connection)
+     (u2-login-program "telnet")
+     (u2-remote-sh "/bin/sh")
+     (u2-login-args nil)
+     (u2-file-prefix nil)
+     (u2-password-end-of-line nil))
+    ("u2-telnet" 
+     (u2-connection-function u2-open-remote-connection)
+     (u2-login-program "telnet")
+     (u2-remote-sh nil)
+     (u2-login-args nil)
+     (u2-file-prefix nil)
+     (u2-password-end-of-line nil))
+    ("ssh"
+     (u2-connection-function u2-open-remote-connection)
+     (u2-login-program "ssh")
+     (u2-remote-sh "/bin/sh")
+     (u2-login-args nil)
+     (u2-file-prefix nil)
+     (u2-password-end-of-line nil))
+    ("rlogin"
+     (u2-connection-function u2-open-remote-connection)
+     (u2-login-program "ssh")
+     (u2-remote-sh "/bin/sh")
+     (u2-login-args nil)
+     (u2-file-prefix nil)
+     (u2-password-end-of-line nil))))
+
+(defun u2-get-connection-setting (method setting-key)
+  (let* ((ms (assoc method u2-connection-method-alist))
+         (sttng (and ms (assoc setting-key ms))))
+    (if sttng
+        (cadr sttng)
+      (let ((ds (assoc setting-key u2-connection-method-defaults)))
+        (and ds (cadr ds))))))
+      
 
 (defun unidata-setup-connection (full-path user host path process)
     (make-local-variable 'unidata-host)
@@ -834,42 +894,173 @@ record."
     (setq unidata-process process)
     (setq unidata-user user)
     (unidata-set-user host user)
-    (unidata-set-account-path host path)
-)
+    (unidata-set-account-path host path))
+  
 
-(put 'unidata-account-path 'permanent-local t)
-(put 'unidata-host 'permanent-local t)
-(put 'unidata-process 'permanent-local t)
-(put 'unidata-user 'permanent-local t)
-(put 'unidata-full-path 'permanent-local t)
+(defcustom u2-host-user-connection-settings
+  '((".*" ".*"
+     ((u2-connection-method . "telnet")
+      (u2-environment
+       ("PS1" . "shell>")
+       ("UDTHOME" . "/usr/ud")
+       ("UDTBIN" . "${UDTHOME}/bin")
+       ("TERM" . "dumb"))
+      (u2-shell-prompt-regexp . "shell>")
+      (u2-prompt-regexp . "^.*[:>][ 	]*$")
+      (u2-set-environment-format-string . "export %s=\"%s\"")
+      (u2-shell-command-name . "/bin/sh")
+      (u2-newline-string . "\n")
+      (u2-home-path . "/usr/ud")
+      (u2-command . "${UDTBIN}/udt"))))
+  "*List of connection information for host/user pairs.
+This list consists of a host regexp as its first element, and a user
+regexp as its second element.  These are use to match a host user
+pair.  The third element is an alist whose keys are symbols used as
+configuration tags. The values of the alist are the values of the
+configuration settings.  The following configuration settings are
+supported:
 
+u2-connection-method      
+    A string naming one of the connection methods in
+    `u2-connection-method-alist'; this will used as the method for 
+    connecting with the host/user pair when the method is not
+    explicitely given in the path
+
+u2-remote-user-name
+    If the user is not given, and this setting is present, its  value
+    will be used as the user name for connecting to the given host. If
+    this is not found, `user-login-name' is used.
+
+u2-environment
+    A list of cons cells whose elemtents are strings, the car is the
+    environment variable set on the host before the U2 program is run.
+    This does not work for connections like `u2-telnet' where the
+    program is not run from the shell, such as to a U2 Telnet server,
+    which goes directly into Unidata or Universe after loggin in.
+
+u2-shell-prompt-regexp
+    The shell prompt which will be used to tell when we are logged in
+    and have entered the shell on the host.  Useless for `u2-telnet'
+    and the like.
+
+u2-prompt-regexp
+    Prompt used to know when the U2 program has begun.
+
+u2-set-environment-format-string
+    Format string used to create the commands to set environment
+    variables in `u2-environment' on the host.  The first parameter to 
+    `format' will be the variable name, the second its value.
+
+u2-shell-command-name
+    Name of the command to run the shell on the host.  Usually
+    \"/bin/sh\".  Not used for `u2-telnet' and the like.
+
+u2-newline-string
+    String sent to make a newline on the host after a command.
+
+u2-home-path
+    Path to the unidata system. Used to find the global catalog.
+
+u2-command
+    The command string used to invoke the U2 system on the host.  Set
+    this if you invoke it through a shell script, for example."
+  :group 'unidata
+  :type '(repeat (list :tag "Host/User Connection settings"
+                  (regexp :tag "Host regexp")
+                  (regexp  :tag "User regexp")
+                  (set
+                   :tag "Settings"
+                   (cons :tag "Connection Method"
+                         (const u2-connection-method)
+                         (string :tag "Connection method"))
+                   (cons :tag "Remote User Name"
+                         (const u2-remote-user-name) 
+                         (string :tag "Remote user name"))
+                   (cons :tag "Environment Variables"
+                         (const u2-environment)
+                         (repeat :tag "Environment"
+                                 (cons 
+                                  :tag "Environment variable to be set by shell before running U2" 
+                                  (string :tag "Environment variable name")
+                                  (string :tag "Environment variable value"))))
+                   (cons :tag "Shell Prompt Regexp"
+                         (const u2-shell-prompt-regexp)
+                         (string :tag "Shell prompt regexp"))
+                   (cons :tag "U2 Prompt Regexp"
+                         (const u2-prompt-regexp)
+                         (string :tag "Prompt regexp"))
+                   (cons :tag "Set Environment Format String"
+                         (const u2-set-environment-format-string)
+                         (string :tag "Set enviroment command format string"))
+                   (cons :tag "Shell Command"
+                         (const u2-shell-command-name)
+                         (string :tag "Shell"))
+                   (cons :tag "Newline String"
+                         (const u2-newline-string)
+                         (string :tag "Newline string"))
+                   (cons :tag "Path to Uni(Verse|Data)"
+                         (const  u2-home-path)
+                         (string :tag "U2 home path"))
+                   (cons :tag "Uni(data|verse) Command"
+                         (const u2-command)
+                         (string :tag "U2 command name"))
+                   ;; (cons (const :tag "Key" u2-type) (string :tag "U2 type"))
+                   ))))
+
+(defun* u2-get-host-user-setting (host user setting)
+  (dolist (l u2-host-user-connection-settings)
+    (if (and (string-match (car l) host)
+             (or (null user) (string-match (cadr l) user)))
+        (let* ((settings-alist (caddr l))
+               (sttng (assoc setting settings-alist)))
+          (and  sttng (return-from u2-get-host-user-setting (cdr sttng)))))))
+      
+(put 'u2-error
+     'error-condition
+     '(error u2-error))
+
+(put 'u2-error 'error-message "U2-mode error")
+
+(put 'u2-connection-error
+     'error-conditions
+     '(error 'u2-error 'u2-connection-error))
+(put 'u2-error 'error-message "U2-mode connection error")
 
 (defun unidata-open-remote-connection (path)
-  (let* ((pthlist (unidata-split-host-path path))
-         (host (nth 0 pthlist))
-         (upath (nth 2 pthlist))
-         (comint-delimiter-argument-list '(?\  ?\t))
-	 (properties (cdr (assoc host telnet-host-properties)))
-	 (telnet-program (if properties (car properties) telnet-program))
-         (name (concat "Unidata(" telnet-program ")-" (comint-arguments host 0 nil)))
-	 (buffer (get-buffer (concat "*" name "*")))
-	 (telnet-options (if (cdr properties) (cons "-l" (cdr properties))))
-	 process)
-    (if (and buffer (get-buffer-process buffer))
-	(pop-to-buffer (concat "*" name "*"))
-      (pop-to-buffer
-       (apply 'make-comint name telnet-program nil telnet-options)))
-    (setq process (get-buffer-process (current-buffer)))
-    (set-process-filter process 'unidata-remote-initial-filter)
-    (setq comint-input-sender 'unidata-send)
-    ;; Don't send the `open' cmd till telnet is ready for it.
-    (with-timeout
-        (60 (accept-process-output process)
-            (error "Unidata timed out waiting for telnet server " host)))
-    (unidata-setup-connection path
-     (nth 1 pthlist) (nth 0 pthlist) (nth 2 pthlist) process)
-    (send-string process (concat "open " host "\n"))
-    (setq telnet-count unidata-initial-count)))
+  (destructuring-bind (host user upath method)
+      (unidata-split-host-path path)
+    (or user
+        (setq user (u2-get-host-user-setting host nil 'u2-remote-user-name))
+        (setq user user-login-name)
+        (signal 'u2-connection-error "Could not find a user for host %s" host))
+    (or method
+        (setq method
+              (u2-get-host-user-setting
+               host user 'u2-connection-method))
+        "ssh")
+    (let* ((comint-delimiter-argument-list '(?\  ?\t))
+           (login-program (u2-get-connection-setting method 'u2-login-program))
+           (name (concat "Unidata(" login-program ")-"  host))
+           (buffer (get-buffer (concat "*" name "*")))
+           (login-options (u2-get-connection-setting method 'u2-login-args))
+           process)
+      ;; Hey! I think now I'll remember what nconc does!
+      (unless (member "-l" login-options)
+        (nconc login-options (list "-l" user)))
+      (nconc login-options host)
+      (if (and buffer (get-buffer-process buffer))
+          (pop-to-buffer (concat "*" name "*"))
+        (pop-to-buffer
+         (apply 'make-comint name login-program nil login-options)))
+      (setq process (get-buffer-process (current-buffer)))
+      (set-process-filter process 'unidata-remote-initial-filter)
+      (setq comint-input-sender 'unidata-send)
+      ;; Don't send the `open' cmd till telnet is ready for it.
+      (with-timeout
+          (60 (accept-process-output process)
+              (error "Unidata timed out waiting for telnet server " host)))
+      (unidata-setup-connection path user host upath process)
+      (setq telnet-count unidata-initial-count))))
 
 (put 'unidata-process 'permanent-local t)
 (put 'unidata-record-path 'permanent-local t)
@@ -901,8 +1092,9 @@ record."
   "Open a TCL command line in Unidata."
   (interactive "DUnidata Path:")
   (unless path (error "No path specified."))
-  (let (host)
-;;    (setq path (unidata-get-account-path host))
+  (destructuring-bind (host user upath method)
+      (unidata-split-host-path path)
+    ;;    (setq path (unidata-get-account-path host))
     (if (unidata-remote-path-p path)
         (unidata-open-remote-connection path)
       (unidata-open-local-connection path))
@@ -923,6 +1115,12 @@ record."
 
 ;;
 ;; $Log$
+;; Revision 1.14  2006/09/26 14:36:48  numeromancer
+;; In the process of modifying the parameters for connecting, so that
+;; I can have two connections in the same emacs sessions, and connection
+;; paramters can be given separately for each host.  It probably does not
+;; work; I'm committing it to get a current copy on my laptop.
+;;
 ;; Revision 1.13  2006/09/11 15:23:56  numeromancer
 ;; Changed the way arguments are passed in unidata action functions.
 ;; Changed the formatting of commands by creating function %u2-join to
