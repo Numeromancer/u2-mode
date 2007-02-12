@@ -313,14 +313,15 @@ in you source code.")
   (modify-syntax-entry ?\! "<"    unibasic-mode-syntax-table)
   (modify-syntax-entry ?\( "()"   unibasic-mode-syntax-table)
   (modify-syntax-entry ?\) ")("   unibasic-mode-syntax-table)
-  (modify-syntax-entry ?\< "(>"   unibasic-mode-syntax-table)
-  (modify-syntax-entry ?\> ")<"   unibasic-mode-syntax-table)
+;  (modify-syntax-entry ?\< "(>"   unibasic-mode-syntax-table)
+;  (modify-syntax-entry ?\> ")<"   unibasic-mode-syntax-table)
+  (modify-syntax-entry ?\< "."   unibasic-mode-syntax-table)
+  (modify-syntax-entry ?\> "."   unibasic-mode-syntax-table)
   (modify-syntax-entry ?\[ "(]"   unibasic-mode-syntax-table)
   (modify-syntax-entry ?\] ")["   unibasic-mode-syntax-table)
   (modify-syntax-entry ?\" "\"\"" unibasic-mode-syntax-table)
   (modify-syntax-entry ?\\ "\"\\" unibasic-mode-syntax-table)
   (modify-syntax-entry ?\' "\"'"  unibasic-mode-syntax-table)
-  (modify-syntax-entry ?\\ "."    unibasic-mode-syntax-table)
   (modify-syntax-entry ?\+ "."    unibasic-mode-syntax-table)
   (modify-syntax-entry ?\- "."    unibasic-mode-syntax-table)
   (modify-syntax-entry ?\= "."    unibasic-mode-syntax-table)
@@ -1426,6 +1427,12 @@ character and not as an operator.")
 
 ;;
 ;; $Log$
+;; Revision 1.9  2007/02/12 21:53:03  numeromancer
+;; I changed the syntax of `<' and `>' to be punctuation so emacs will
+;; indent correctly when they are used as (less|greater)-than symbols.
+;;
+;; I set the backslash to be a string delimiter.
+;;
 ;; Revision 1.8  2006/09/14 21:09:12  numeromancer
 ;; Set the LITERAL parameter of `replace-match' to `t'. With the
 ;; LITERAL parm of replace-match set to nil, the match was failing on
