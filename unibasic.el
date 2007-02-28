@@ -1336,6 +1336,15 @@ auto-capitalization. If you add commands to this list you must re-make
   (eval-when-compile
     (concat "\\b\\(" (make-regexp unibasic-function-words) "\\)\\b[ \t]*(")))
 
+;; List of function names to which the user can add in .emacs
+(eval-and-compile
+  (defvar unibasic-user-function-words '()))
+
+(defvar unibasic-user-function-regexp
+  (eval-when-compile
+    (concat "\\b\\(" (make-regexp unibasic-user-function-words) "\\)\\b[ \t]*(")))
+
+
 (eval-and-compile
   (defvar unibasic-special-words
     '( "@AM" "@VM" "@SM" "@FM" "@RM" "@TM" "@SVM" "@ACCOUNT" "@COMMAND"
@@ -1370,6 +1379,7 @@ character and not as an operator.")
           (cons unibasic-label-regexp    'font-lock-reference-face)
           (cons unibasic-special-regexp  'font-lock-variable-name-face)
           (cons unibasic-function-regexp '(1 font-lock-type-face))
+          (cons unibasic-user-function-regexp '(1 font-lock-type-face))
           (cons unibasic-keyword-regexp  '(2 font-lock-function-name-face))
           (cons unibasic-command-regexp  '(2 font-lock-function-name-face))
           (cons unibasic-operator-regexp 'font-lock-keyword-face)
@@ -1427,6 +1437,12 @@ character and not as an operator.")
 
 ;;
 ;; $Log$
+;; Revision 1.10  2007/02/28 19:19:17  numeromancer
+;; I added unibasic-user-function-words and
+;; unibasic-user-function-regexp. The first can now be set to a list of
+;; function names as strings in .emacs by the user so that his own
+;; utilities will be highlighted in the source.
+;;
 ;; Revision 1.9  2007/02/12 21:53:03  numeromancer
 ;; I changed the syntax of `<' and `>' to be punctuation so emacs will
 ;; indent correctly when they are used as (less|greater)-than symbols.
